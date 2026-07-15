@@ -63,7 +63,7 @@ function bindEvents() {
       switchPage(page);
     });
   });
-  // 老规矩按钮
+  // 快捷记录按钮
   const favBtn = document.getElementById('favBtn');
   if (favBtn) {
     favBtn.addEventListener('click', function(e) {
@@ -103,7 +103,7 @@ function updateFavBtn() {
   const btn = document.getElementById('favBtn');
   if (!btn || !selectedFav) return;
   const txt = btn.querySelector('.fav-text');
-  if (txt) txt.textContent = `老规矩 — ${selectedFav.n}（${selectedFav.sugar}/${selectedFav.ice} ¥${selectedFav.p}）`;
+  if (txt) txt.textContent = `快捷记录 — ${selectedFav.n}（${selectedFav.sugar}/${selectedFav.ice} ¥${selectedFav.p}）`;
 }
 
 function loadTheme() {
@@ -283,7 +283,7 @@ function renderHome(main) {
     html += `<div class="empty-state">
       <div class="empty-icon">☕</div>
       <div class="empty-text">今天还没记一杯呢</div>
-      <div class="empty-hint">点下方「记录」或「老规矩」快速记录</div>
+      <div class="empty-hint">点下方「记录」或「快捷记录」快速记录</div>
     </div>`;
   }
 
@@ -495,14 +495,14 @@ function syncRecordUI() {
     if (preview) preview.remove();
   }
 
-  // 设老规矩按钮
+  // 设快捷记录按钮
   let favBtn = document.getElementById('setFavBtn');
   if (name) {
     if (!favBtn) {
       favBtn = document.createElement('button');
       favBtn.id = 'setFavBtn';
       favBtn.className = 'btn-set-fav';
-      favBtn.textContent = '⭐ 设为老规矩快捷';
+      favBtn.textContent = '⭐ 设为快捷记录';
       favBtn.addEventListener('click', function(e) {
         e.preventDefault();
         setFavorite();
@@ -634,7 +634,7 @@ function setFavorite() {
   };
   localStorage.setItem('bt_fav', JSON.stringify(selectedFav));
   updateFavBtn();
-  toast('老规矩已更新 ✅');
+  toast('快捷记录已更新 ✅');
 }
 
 /* ---------- 账单 ---------- */
@@ -745,7 +745,7 @@ function renderSettings(main) {
     </div>
 
     <div class="settings-group">
-      <div class="settings-group-title">老规矩 · 快捷记录</div>
+      <div class="settings-group-title">快捷记录</div>
       <div class="info-card">
         ⚡ ${esc(selectedFav?.n||'--')}（${selectedFav?.sugar||''}/${selectedFav?.ice||''} ¥${selectedFav?.p||0}）
         <button id="resetFavBtn" style="margin-left:12px;font-size:12px;background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;color:inherit;">重置默认</button>
@@ -772,7 +772,7 @@ function renderSettings(main) {
     });
   });
 
-  // 绑定重置老规矩
+  // 绑定重置快捷记录
   const resetBtn = document.getElementById('resetFavBtn');
   if (resetBtn) {
     resetBtn.addEventListener('click', function() {
