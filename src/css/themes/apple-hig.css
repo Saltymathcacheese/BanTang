@@ -318,6 +318,10 @@ body {
 .record-sheet-title { color: var(--text); font-weight: 700; }
 .record-sheet-close { color: var(--text2); background: var(--fill-tertiary); }
 
+/* 每日寄语 */
+.daily-quote { background: var(--fill-tertiary); border: 1px solid var(--separator); }
+.daily-quote-text { color: var(--text); }
+
 /* Toast & Modal */
 .toast {
   background: rgba(28,28,30,0.92); color: #FFF;

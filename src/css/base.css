@@ -468,9 +468,42 @@ body {
 /* ---------- 通用 ---------- */
 .hidden { display: none !important; }
 .main-content {
-  animation: pageIn 0.25s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+  animation: pageIn 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 @keyframes pageIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* 入场动画 */
+.anim-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.anim-item.animated-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 每日寄语 */
+.daily-quote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: rgba(0,0,0,0.03);
+}
+.daily-quote-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.daily-quote-text {
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+  color: inherit;
 }

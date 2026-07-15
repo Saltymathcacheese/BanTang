@@ -314,6 +314,10 @@ body {
 .record-sheet-title { color: var(--ink); font-family: var(--font-display); }
 .record-sheet-close { color: var(--ink); }
 
+/* 每日寄语 */
+.daily-quote { background: var(--rice-warm); border: var(--border); border-radius: var(--radius); }
+.daily-quote-text { color: var(--ink); font-style: italic; }
+
 /* Toast & Modal */
 .toast {
   background: var(--ink); color: #FFF;

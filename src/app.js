@@ -32,8 +32,26 @@ const PRESETS = {
     { t:'MILK_TEA', n:'芝士奶盖茶',   c:100, s:24, p:20 },
   ]
 };
-const SUGAR_OPTS = ['无糖','三分糖','五分糖','七分糖','全糖'];
-const ICE_OPTS   = ['去冰','少冰','正常冰','多冰','热饮'];
+const DAILY_QUOTES = [
+  '今天也是需要咖啡因续命的一天 ☕️',
+  '来杯无糖奶茶，四舍五入等于没喝 🧋',
+  '生活太苦？记得给自己加点糖 🍬',
+  '一杯冰美式，清醒地面对这个世界 ❄️',
+  '奶茶是液体的拥抱，温柔且治愈 🫂',
+  '咖啡是成年人白天的酒精，微醺不醉 🥃',
+  '三分糖的克制，是对生活的温柔妥协 ✨',
+  '少冰去糖，成年人最后的倔强 💪',
+  '没有什么是一杯咖啡解决不了的，如果有，就两杯 ☕️☕️',
+  '今天的快乐是奶茶给的，明天的体重明天再说 🎈',
+  '喝咖啡的人不一定是艺术家，但一定很困 😴',
+  '热饮暖手，冷饮沁心，都是生活的温度 🌡️',
+  '每一杯澳白，都是对庸常生活的优雅反击 🎯',
+  '手冲咖啡的仪式感，是对自己的最高礼遇 🫖',
+  '低卡糖 + 燕麦奶，自律和放纵的完美平衡 ⚖️',
+  '下午三点的奶茶，是打工人给自己发的勋章 🏅',
+  '拉花很丑没关系，味道对了就是好咖啡 🤎',
+  '人生就像抹茶拿铁，苦中带甜才够味 🍵',
+];
 
 /* ---------- 全局状态 ---------- */
 let currentPage = 'home';
@@ -282,34 +300,53 @@ function renderPage(page) {
     case 'profile': renderProfile(main); break;
   }
   updateRings();
+
+  // 入场动画：对子元素逐个添加 animated-in
+  const items = main.querySelectorAll('.anim-item');
+  items.forEach(function(el, i) {
+    el.style.animationDelay = (i * 60) + 'ms';
+    el.classList.add('animated-in');
+  });
 }
 
 /* ---------- 主页 ---------- */
 function renderHome(main) {
   const today = todayRecords();
+  const quote = getDailyQuote();
+
   let html = `
-    <div class="section-header">
+    <!-- 每日寄语 -->
+    <div class="anim-item daily-quote">
+      <span class="daily-quote-icon">💬</span>
+      <span class="daily-quote-text">${esc(quote)}</span>
+    </div>
+
+    <div class="anim-item section-header">
       <span class="section-title">今日记录</span>
       <span class="section-count">${today.length} 杯</span>
     </div>`;
 
   if (today.length === 0) {
-    html += `<div class="empty-state">
+    html += `<div class="anim-item empty-state">
       <div class="empty-icon">☕</div>
       <div class="empty-text">今天还没记一杯呢</div>
       <div class="empty-hint">点击右下角 + 按钮快速记录</div>
     </div>`;
   }
 
-  today.forEach(r => { html += recordItemHtml(r); });
+  today.forEach(function(r, i) {
+    html += '<div class="anim-item">' + recordItemHtml(r) + '</div>';
+  });
 
   const older = records.filter(r => !todayRecords().includes(r)).slice(0, 15);
   if (older.length > 0) {
-    html += `<div class="section-header" style="margin-top:24px">
+    html += `<div class="anim-item section-header" style="margin-top:24px">
       <span class="section-title">更早记录</span>
       <span class="section-count">${older.length}+ 杯</span>
     </div>`;
-    older.forEach(r => { html += recordItemHtml(r); });
+    older.forEach(function(r) {
+      html += '<div class="anim-item">' + recordItemHtml(r) + '</div>';
+    });
   }
   main.innerHTML = html;
 }
@@ -874,6 +911,16 @@ function resetFav() {
   localStorage.setItem('bt_fav', JSON.stringify(selectedFav));
   updateFavBtn();
   toast('已重置为默认');
+}
+
+/* ---------- 每日寄语 ---------- */
+function getDailyQuote() {
+  // 基于当日日期 (YYYY-MM-DD) 确定性选择，同一天不会变
+  const today = new Date().toISOString().slice(0, 10);
+  let seed = 0;
+  for (let i = 0; i < today.length; i++) { seed = ((seed << 5) - seed) + today.charCodeAt(i); seed |= 0; }
+  const idx = Math.abs(seed) % DAILY_QUOTES.length;
+  return DAILY_QUOTES[idx];
 }
 
 /* ---------- 工具 ---------- */
