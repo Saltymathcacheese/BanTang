@@ -16,7 +16,6 @@ export async function removeBackgroundFromFile(file: File): Promise<string> {
     device: 'gpu',           // WebGPU > WebGL > CPU 自动降级
     output: {
       format: 'image/png',
-      type: 'foreground',    // 只输出前景（透明背景）
     },
   });
 

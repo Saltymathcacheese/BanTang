@@ -1,7 +1,14 @@
 const CACHE = 'bantang-v1';
 const FILES = [
   'index.html',
-  'css/style.css',
+  'css/base.css',
+  'css/themes/apple-hig.css',
+  'css/themes/neo-brutalism.css',
+  'css/themes/wabi-sabi.css',
+  'css/themes/cyberpunk.css',
+  'css/themes/matcha-mint.css',
+  'css/themes/taro-purple.css',
+  'css/themes/night-brew.css',
   'js/app.js',
   'manifest.json'
 ];

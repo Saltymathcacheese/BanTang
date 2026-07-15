@@ -195,7 +195,7 @@ function applyTheme(t) {
     taro:   'css/themes/taro-purple.css',
     night:  'css/themes/night-brew.css',
   };
-  if (link && themeMap[t]) { link.href = themeMap[t]; }
+  if (link && themeMap[t]) { link.href = themeMap[t]; document.head.appendChild(link); }
   // 更新 PWA 状态栏颜色
   const metaColor = document.getElementById('metaThemeColor');
   const colorMap = {
