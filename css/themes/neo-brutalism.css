@@ -331,6 +331,7 @@ body {
 
 .avatar-chip { background: var(--white); border: var(--border-sm); }
 .avatar-chip.active { background: var(--lime); border-color: var(--black); }
+.sticker-area { border-color: var(--black); background: var(--white); }
 .limit-item { border: var(--border-sm); background: var(--white); }
 
 /* Toast & Modal */

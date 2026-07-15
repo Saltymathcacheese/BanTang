@@ -496,6 +496,23 @@ function renderRecordToContainer(container) {
   const disabled = !name || !recState.price;
 
   container.innerHTML = `
+    <!-- 贴纸预览区 -->
+    <div class="sticker-area" id="stickerArea">
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+      ${recState.image ? `
+        <div class="sticker-preview">
+          <img src="${recState.image}" alt="预览" id="stickerPreviewImg">
+          ${recState.imageProcessing ? '<div class="sticker-loading-overlay"><div class="sticker-spinner"></div><span>智能抠图中...</span></div>' : ''}
+        </div>
+      ` : `
+        <div class="sticker-placeholder">
+          <span class="sticker-camera-icon">📷</span>
+          <span class="sticker-hint">拍照 / 上传</span>
+          <span class="sticker-sub-hint">AI 自动抠图</span>
+        </div>
+      `}
+    </div>
+
     <div class="form-section">
       <div class="form-label">饮品类型</div>
       <div class="type-row">
@@ -506,12 +523,6 @@ function renderRecordToContainer(container) {
           <span class="type-icon">🧋</span><span class="type-label">奶茶</span><span class="type-desc">Milk Tea</span>
         </div>
       </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-label">拍照抠图</div>
-      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
-      <button class="btn-set-fav" id="photoBtn" style="margin-bottom:8px">📷 拍照 / 选图（自动抠图）</button>
     </div>
 
     <div class="form-section">
@@ -566,8 +577,6 @@ function renderRecordToContainer(container) {
     </div>
 
     <button class="btn-record" ${disabled?'disabled':''} id="submitBtn">🌿 干杯！记一杯</button>
-    ${recState.imageProcessing ? '<div class="info-card" style="margin-bottom:10px;text-align:center">🖼️ 正在处理图片...</div>' : ''}
-    ${recState.image ? '<div class="info-card" style="margin-bottom:10px;text-align:center"><img src="' + recState.image + '" style="max-width:120px;max-height:120px;border-radius:8px;display:block;margin:0 auto"><span style="font-size:11px">抠图预览</span></div>' : ''}
   `;
 
   bindRecordEvents();
@@ -692,41 +701,45 @@ function bindRecordEvents() {
     });
   });
 
-  // 拍照按钮
+  // 贴纸区点击 → 触发文件选择
+  const stickerArea = document.getElementById('stickerArea');
   const photoInput = document.getElementById('photoInput');
-  const photoBtn = document.getElementById('photoBtn');
-  if (photoBtn && photoInput) {
-    photoBtn.addEventListener('click', function(e) {
+  if (stickerArea && photoInput) {
+    stickerArea.addEventListener('click', function(e) {
       e.preventDefault();
       photoInput.click();
     });
     photoInput.addEventListener('change', async function() {
       const file = this.files && this.files[0];
       if (!file) return;
-      // 先显示原图预览
+
+      // 显示原图
       const reader = new FileReader();
       reader.onload = function(ev) {
         recState.image = ev.target.result;
+        recState.imageProcessing = true;
         renderRecordToContainer(document.getElementById('recordSheetBody'));
+        // 异步抠图
+        startImageSegmentation(file);
       };
       reader.readAsDataURL(file);
-
-      // 尝试抠图
-      recState.imageProcessing = true;
-      renderRecordToContainer(document.getElementById('recordSheetBody'));
-      try {
-        const mod = await import('./utils/imageProcessor.js');
-        const base64 = await mod.removeBackgroundFromFile(file);
-        recState.image = base64;
-        recState.imageProcessing = false;
-        renderRecordToContainer(document.getElementById('recordSheetBody'));
-        toast('抠图完成 ✅');
-      } catch (e) {
-        console.warn('抠图失败，使用原图:', e.message);
-        recState.imageProcessing = false;
-        renderRecordToContainer(document.getElementById('recordSheetBody'));
-      }
     });
+  }
+
+  async function startImageSegmentation(file) {
+    try {
+      const mod = await import('./utils/imageProcessor.js');
+      const base64 = await mod.removeBackgroundFromFile(file);
+      recState.image = base64;
+      toast('抠图完成 ✅');
+    } catch (e) {
+      console.warn('抠图失败，保留原图:', e.message);
+      // image 已设为原图，直接保留
+    } finally {
+      recState.imageProcessing = false;
+      var body = document.getElementById('recordSheetBody');
+      if (body) renderRecordToContainer(body);
+    }
   }
 
   // 提交按钮（记录页）

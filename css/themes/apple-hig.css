@@ -339,6 +339,8 @@ body {
 .avatar-chip.active { border-color: var(--blue); background: var(--blue-light); }
 .limit-item { background: var(--fill-tertiary); }
 
+.sticker-area { border-color: var(--separator); background: var(--fill-tertiary); }
+
 .profile-footer .pf-version { font-family: var(--font-mono, monospace); }
 
 /* Toast & Modal */

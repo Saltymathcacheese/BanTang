@@ -360,6 +360,7 @@ body {
 
 .avatar-chip { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08); }
 .avatar-chip.active { border-color: var(--neon-cyan); background: rgba(0,240,255,0.08); }
+.sticker-area { border-color: rgba(0,240,255,0.2); background: var(--card-bg); }
 .limit-item { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.06); }
 
 /* Toast & Modal */
