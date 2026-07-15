@@ -358,6 +358,10 @@ body {
 .day-detail-close { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); }
 .day-detail-summary { background: rgba(0,240,255,0.06); color: var(--text); }
 
+.avatar-chip { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08); }
+.avatar-chip.active { border-color: var(--neon-cyan); background: rgba(0,240,255,0.08); }
+.limit-item { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.06); }
+
 /* Toast & Modal */
 .toast {
   background: var(--card-bg); color: var(--neon-cyan);

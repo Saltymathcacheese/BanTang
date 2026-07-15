@@ -300,6 +300,41 @@ body {
 .nav-item.active { color: var(--coffee); font-weight: 700; }
 .nav-item.active::after { background: var(--coffee); }
 
+/* FAB */
+.fab {
+  background: var(--coffee); color: #FFF;
+  border: none; box-shadow: var(--shadow-soft);
+}
+.fab:active { transform: scale(0.92); box-shadow: var(--shadow-card); }
+
+/* 记录弹窗 */
+.record-sheet-overlay { background: rgba(0,0,0,0.2); }
+.record-sheet { background: var(--rice); }
+.record-sheet-header { background: var(--rice); border-bottom: 1px solid var(--clay-light); }
+.record-sheet-title { color: var(--ink); font-family: var(--font-display); }
+.record-sheet-close { color: var(--ink); }
+
+/* 每日寄语 */
+.daily-quote { background: var(--rice-warm); border: var(--border); border-radius: var(--radius); }
+.daily-quote-text { color: var(--ink); font-style: italic; }
+
+/* 日历看板 */
+.cal-nav-btn { background: var(--rice-warm); color: var(--ink); border-radius: 50%; }
+.cal-month-label { color: var(--ink); font-family: var(--font-display); }
+.cal-weekdays { color: var(--ink-light); }
+.cal-cell { background: var(--white); border: var(--border); border-radius: var(--radius-sm); }
+.cal-cell-empty { background: transparent; border: none; }
+.cal-today .cal-day-num { background: var(--coffee); color: #FFF; border-radius: 50%; }
+.cal-has-records { background: var(--green-tea-light); }
+.day-detail-card { background: var(--white); border: var(--border); border-radius: var(--radius-lg); }
+.day-detail-date { color: var(--ink); }
+.day-detail-close { background: var(--rice-warm); color: var(--ink-light); }
+.day-detail-summary { background: var(--rice-warm); color: var(--ink); }
+
+.avatar-chip { background: var(--rice-warm); border-radius: 8px; }
+.avatar-chip.active { background: var(--green-tea-light); border-color: var(--green-tea); }
+.limit-item { background: var(--rice-warm); border-radius: var(--radius-sm); }
+
 /* Toast & Modal */
 .toast {
   background: var(--ink); color: #FFF;

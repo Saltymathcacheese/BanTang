@@ -331,6 +331,10 @@ body {
 .day-detail-close { background: var(--rice-warm); color: var(--ink-light); }
 .day-detail-summary { background: var(--rice-warm); color: var(--ink); }
 
+.avatar-chip { background: var(--rice-warm); border-radius: 8px; }
+.avatar-chip.active { background: var(--green-tea-light); border-color: var(--green-tea); }
+.limit-item { background: var(--rice-warm); border-radius: var(--radius-sm); }
+
 /* Toast & Modal */
 .toast {
   background: var(--ink); color: #FFF;

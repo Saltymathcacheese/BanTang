@@ -335,6 +335,12 @@ body {
 .day-detail-close { background: var(--fill-tertiary); color: var(--text2); }
 .day-detail-summary { background: var(--fill-tertiary); color: var(--text); }
 
+.avatar-chip { background: var(--fill-tertiary); }
+.avatar-chip.active { border-color: var(--blue); background: var(--blue-light); }
+.limit-item { background: var(--fill-tertiary); }
+
+.profile-footer .pf-version { font-family: var(--font-mono, monospace); }
+
 /* Toast & Modal */
 .toast {
   background: rgba(28,28,30,0.92); color: #FFF;

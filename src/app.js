@@ -3,10 +3,17 @@
 // ═══════════════════════════════════════
 
 /* ---------- 常量 ---------- */
-const CAFFEINE_MAX = 400;
-const SUGAR_MAX = 50;
 const RING_R = 48;
 const CIRCUMFERENCE = Math.PI * RING_R * 2;
+
+/* ---------- 全局设置（可持久化）---------- */
+let userSettings = {
+  caffeineMax: 400,
+  sugarMax: 50,
+  nickname: '',
+  avatar: '☕',
+  theme: 'apple',
+};
 
 const PRESETS = {
   COFFEE: [
@@ -61,6 +68,7 @@ let confirmCallback = null;
 
 /* ---------- 初始化 ---------- */
 (function init() {
+  loadSettings();
   loadRecords();
   loadFav();
   loadTheme();
@@ -70,6 +78,21 @@ let confirmCallback = null;
   bindEvents();
   console.log('半糖主义 PWA 初始化完成');
 })();
+
+/* ---------- 设置存取 ---------- */
+function loadSettings() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('bt_settings'));
+    if (saved) { Object.assign(userSettings, saved); }
+  } catch(e) {}
+}
+function saveSettings() {
+  localStorage.setItem('bt_settings', JSON.stringify(userSettings));
+  // 同步全局约束
+  loadTheme(); // refresh theme if changed
+  updateRings();
+  if (currentPage === 'home' || currentPage === 'profile') { renderPage(currentPage); }
+}
 
 function bindEvents() {
   // 底部导航
@@ -140,12 +163,12 @@ function updateFavBtn() {
 }
 
 function loadTheme() {
-  const t = localStorage.getItem('bt_theme') || 'apple';
-  applyTheme(t);
+  applyTheme(userSettings.theme || 'apple');
 }
 function applyTheme(t) {
+  userSettings.theme = t;
+  localStorage.setItem('bt_settings', JSON.stringify(userSettings));
   document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem('bt_theme', t);
   // 切换 CSS 文件
   const link = document.getElementById('themeStylesheet');
   const themeMap = {
@@ -178,8 +201,10 @@ function ringInit() {
 function updateRings() {
   const c = todayCaffeine();
   const s = todaySugar();
-  const cPct = Math.min(c / CAFFEINE_MAX, 1);
-  const sPct = Math.min(s / SUGAR_MAX, 1);
+  const caffeineMax = userSettings.caffeineMax || 400;
+  const sugarMax = userSettings.sugarMax || 50;
+  const cPct = Math.min(c / caffeineMax, 1);
+  const sPct = Math.min(s / sugarMax, 1);
 
   const cr = document.getElementById('caffeineRing');
   const sr = document.getElementById('sugarRing');
@@ -197,11 +222,17 @@ function updateRings() {
     sv.style.color = sPct >= 1 ? 'var(--warn)' : 'var(--black)';
   }
 
+  // 更新上限标签
+  var cl = document.getElementById('caffeineLimitLabel');
+  if (cl) cl.textContent = '上限 ' + caffeineMax + 'mg';
+  var sl = document.getElementById('sugarLimitLabel');
+  if (sl) sl.textContent = '上限 ' + sugarMax + 'g';
+
   // 警告
   const cwarn = document.getElementById('caffeineWarning');
   if (cwarn) {
-    cwarn.classList.toggle('hidden', c <= CAFFEINE_MAX);
-    if (c > CAFFEINE_MAX) cwarn.classList.add('alert-pulse');
+    cwarn.classList.toggle('hidden', c <= caffeineMax);
+    if (c > caffeineMax) cwarn.classList.add('alert-pulse');
   }
 
   const hasLateCoffee = todayRecords().some(r => r.t === 'COFFEE' && new Date(r.ts).getHours() >= 20);
@@ -981,8 +1012,13 @@ function renderFinanceHTML(wk, mo, cups, amount) {
 
 /* ---------- 我的页 ---------- */
 function renderProfile(main) {
-  const t = localStorage.getItem('bt_theme') || 'apple';
+  const t = userSettings.theme || 'apple';
+  const nick = userSettings.nickname || '';
+  const av = userSettings.avatar || '☕';
+  const cMax = userSettings.caffeineMax || 400;
+  const sMax = userSettings.sugarMax || 50;
 
+  const AVATARS = ['☕','🧋','🍵','🥤','🧃','🍹','🫖','🥛','🍶','🍺'];
   const themes = [
     { id:'apple', name:'苹果风格',   desc:'毛玻璃·大圆角·SF字体',   swatches:['#0071E3','#F2F2F7','#1C1C1E','#34C759'] },
     { id:'neo',   name:'潮玩波普',   desc:'硬阴影·粗边框·波普亮色', swatches:['#FFD600','#FF5E8A','#00D4C8','#1A1A1A'] },
@@ -991,8 +1027,43 @@ function renderProfile(main) {
   ];
 
   main.innerHTML = `
+    <!-- 用户卡片 -->
     <div class="settings-group">
-      <div class="settings-group-title">主题风格</div>
+      <div class="user-card">
+        <div class="user-avatar-row">
+          <span class="user-avatar-large">${av}</span>
+          <div class="user-avatar-picker">
+            ${AVATARS.map(function(a) {
+              return '<span class="avatar-chip ' + (av===a?'active':'') + '" data-avatar="' + a + '">' + a + '</span>';
+            }).join('')}
+          </div>
+        </div>
+        <div class="user-nick-row">
+          <input class="input-field" id="nicknameInput" placeholder="输入昵称..." value="${esc(nick)}" maxlength="20">
+        </div>
+      </div>
+    </div>
+
+    <!-- 每日上限设置 -->
+    <div class="settings-group">
+      <div class="settings-group-title">⚖️ 每日上限</div>
+      <div class="limit-row">
+        <div class="limit-item">
+          <span class="limit-label">☕ 咖啡因</span>
+          <input class="input-field limit-input" id="caffeineMaxInput" type="number" value="${cMax}" min="50" max="2000" step="10">
+          <span class="limit-unit">mg</span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-label">🍬 糖分</span>
+          <input class="input-field limit-input" id="sugarMaxInput" type="number" value="${sMax}" min="10" max="500" step="5">
+          <span class="limit-unit">g</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="settings-group">
+      <div class="settings-group-title">🎨 主题风格</div>
       <div class="theme-picker-grid">
         ${themes.map(function(th) {
           return '<div class="theme-picker-card ' + (t===th.id?'active':'') + '" data-theme="' + th.id + '">' +
@@ -1006,38 +1077,113 @@ function renderProfile(main) {
       </div>
     </div>
 
+    <!-- 快捷记录 -->
     <div class="settings-group">
-      <div class="settings-group-title">快捷记录</div>
+      <div class="settings-group-title">⚡ 快捷记录</div>
       <div class="info-card">
-        ⚡ ${esc(selectedFav?.n||'--')}（${selectedFav?.sugar||''}/${selectedFav?.ice||''} ¥${selectedFav?.p||0}）
+        ${esc(selectedFav?.n||'--')}（${selectedFav?.sugar||''}/${selectedFav?.ice||''} ¥${selectedFav?.p||0}）
         <button id="resetFavBtn" style="margin-left:12px;font-size:12px;background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;color:inherit;">重置默认</button>
       </div>
     </div>
 
+    <!-- 数据备份 -->
     <div class="settings-group">
-      <div class="settings-group-title">健康提醒</div>
-      <div class="info-card">☕ 每日咖啡因上限 400mg<br>🍬 每日糖分上限 50g<br>🌙 晚上8点后喝咖啡可能影响睡眠</div>
+      <div class="settings-group-title">💾 数据管理</div>
+      <div class="backup-row">
+        <button class="btn-set-fav" id="exportBtn">📤 导出 JSON</button>
+        <button class="btn-set-fav" id="importBtn">📥 导入 JSON</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none">
+      </div>
     </div>
 
-    <div class="settings-group">
-      <div class="settings-group-title">关于</div>
-      <div class="info-card">半糖主义 v1.3<br>记录每一杯咖啡与奶茶</div>
+    <!-- 页脚 -->
+    <div class="profile-footer">
+      <div class="pf-name">半糖主义 BANTANG</div>
+      <div class="pf-version">v1.3.0</div>
+      <div class="pf-thanks">❤️ 记录每一杯咖啡与奶茶<br>感谢开源社区的贡献</div>
     </div>
   `;
 
+  // 头像选择
+  document.querySelectorAll('.avatar-chip').forEach(function(el) {
+    el.addEventListener('click', function() {
+      userSettings.avatar = this.dataset.avatar;
+      saveSettings();
+    });
+  });
+  // 昵称
+  var nickInput = document.getElementById('nicknameInput');
+  if (nickInput) {
+    nickInput.addEventListener('input', function() {
+      userSettings.nickname = this.value;
+      saveSettings();
+    });
+  }
+  // 上限
+  var cInput = document.getElementById('caffeineMaxInput');
+  var sInput = document.getElementById('sugarMaxInput');
+  if (cInput) cInput.addEventListener('change', function() {
+    userSettings.caffeineMax = parseInt(this.value) || 400;
+    saveSettings();
+  });
+  if (sInput) sInput.addEventListener('change', function() {
+    userSettings.sugarMax = parseInt(this.value) || 50;
+    saveSettings();
+  });
+  // 主题
   document.querySelectorAll('.theme-picker-card').forEach(function(el) {
     el.addEventListener('click', function() {
-      const theme = this.dataset.theme;
+      var theme = this.dataset.theme;
       applyTheme(theme);
       renderProfile(document.getElementById('mainContent'));
     });
   });
-
-  const resetBtn = document.getElementById('resetFavBtn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function() {
-      resetFav();
-      renderProfile(document.getElementById('mainContent'));
+  // 快捷记录重置
+  var resetBtn = document.getElementById('resetFavBtn');
+  if (resetBtn) resetBtn.addEventListener('click', function() {
+    resetFav();
+    renderProfile(document.getElementById('mainContent'));
+  });
+  // 导出
+  var exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) exportBtn.addEventListener('click', function() {
+    var data = JSON.stringify({
+      version: '1.3.0',
+      exportedAt: new Date().toISOString(),
+      settings: userSettings,
+      records: records,
+      fav: selectedFav,
+    }, null, 2);
+    var blob = new Blob([data], {type:'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bantang-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    toast('导出成功 ✅');
+  });
+  // 导入
+  var importBtn = document.getElementById('importBtn');
+  var importInput = document.getElementById('importFileInput');
+  if (importBtn && importInput) {
+    importBtn.addEventListener('click', function() { importInput.click(); });
+    importInput.addEventListener('change', function() {
+      var file = this.files && this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          var data = JSON.parse(ev.target.result);
+          if (data.records) { records = data.records; saveRecords(); }
+          if (data.settings) { Object.assign(userSettings, data.settings); saveSettings(); }
+          if (data.fav) { selectedFav = data.fav; localStorage.setItem('bt_fav', JSON.stringify(selectedFav)); updateFavBtn(); }
+          renderProfile(document.getElementById('mainContent'));
+          updateRings();
+          toast('导入成功 ✅ 共 ' + (data.records ? data.records.length : 0) + ' 条记录');
+        } catch(e) {
+          toast('导入失败：文件格式错误 ❌');
+        }
+      };
+      reader.readAsText(file);
     });
   }
 }
@@ -1074,7 +1220,7 @@ function randomMotivation(cups) {
 }
 
 /* ---------- 设置（已合并到我的页）---------- */
-// renderSettings 不再独立存在，内容合并到 renderProfile 中
+// renderSettings 已弃用，内容合并到 renderProfile
 
 function resetFav() {
   selectedFav = { t:'COFFEE', n:'生椰拿铁', sugar:'三分糖', ice:'去冰', c:200, s:15, p:22 };
