@@ -296,6 +296,21 @@ body {
 .nav-item.active { color: var(--black); font-weight: 900; }
 .nav-item.active::after { background: var(--black); }
 
+/* FAB */
+.fab {
+  background: var(--pink); color: var(--black);
+  border: var(--border); box-shadow: var(--shadow-hard);
+  font-family: var(--font);
+}
+.fab:active { transform: translate(3px,3px) scale(0.92); box-shadow: none; }
+
+/* 记录弹窗 */
+.record-sheet-overlay { background: rgba(0,0,0,0.4); }
+.record-sheet { background: var(--bg); }
+.record-sheet-header { background: var(--bg); }
+.record-sheet-title { color: var(--black); }
+.record-sheet-close { color: var(--black); }
+
 /* Toast & Modal */
 .toast {
   background: var(--black); color: #FFF;

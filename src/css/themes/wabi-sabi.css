@@ -300,6 +300,20 @@ body {
 .nav-item.active { color: var(--coffee); font-weight: 700; }
 .nav-item.active::after { background: var(--coffee); }
 
+/* FAB */
+.fab {
+  background: var(--coffee); color: #FFF;
+  border: none; box-shadow: var(--shadow-soft);
+}
+.fab:active { transform: scale(0.92); box-shadow: var(--shadow-card); }
+
+/* 记录弹窗 */
+.record-sheet-overlay { background: rgba(0,0,0,0.2); }
+.record-sheet { background: var(--rice); }
+.record-sheet-header { background: var(--rice); border-bottom: 1px solid var(--clay-light); }
+.record-sheet-title { color: var(--ink); font-family: var(--font-display); }
+.record-sheet-close { color: var(--ink); }
+
 /* Toast & Modal */
 .toast {
   background: var(--ink); color: #FFF;

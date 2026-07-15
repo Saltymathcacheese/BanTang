@@ -338,6 +338,86 @@ body {
 }
 .nav-icon { font-size: 20px; line-height: 1; }
 
+/* ---------- FAB 悬浮按钮 ---------- */
+.fab {
+  position: fixed;
+  bottom: calc(var(--nav-h, 72px) + var(--bottom-safe, 16px) + 16px);
+  right: max(16px, calc((100vw - 480px) / 2 + 16px));
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 110;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.fab:active { transform: scale(0.92); }
+.fab-icon {
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ---------- 记录弹窗 Sheet ---------- */
+.record-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: sheetFadeIn 0.25s ease;
+}
+@keyframes sheetFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.record-sheet {
+  background: var(--card-bg, #FFF);
+  border-radius: 22px 22px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: sheetSlideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.record-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.record-sheet-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+.record-sheet-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.06);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.record-sheet-close:active { background: rgba(0,0,0,0.12); }
+.record-sheet-body {
+  padding: 0 20px 24px;
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;

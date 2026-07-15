@@ -54,7 +54,7 @@ let confirmCallback = null;
 })();
 
 function bindEvents() {
-  // 底部导航 — 使用更可靠的事件绑定
+  // 底部导航
   document.querySelectorAll('.nav-item').forEach(el => {
     el.addEventListener('click', function(e) {
       e.preventDefault();
@@ -63,12 +63,27 @@ function bindEvents() {
       switchPage(page);
     });
   });
-  // 快捷记录按钮
-  const favBtn = document.getElementById('favBtn');
-  if (favBtn) {
-    favBtn.addEventListener('click', function(e) {
+  // FAB 记录按钮
+  const fabBtn = document.getElementById('fabRecordBtn');
+  if (fabBtn) {
+    fabBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      quickFavorite();
+      openRecordSheet();
+    });
+  }
+  // 记录弹窗关闭按钮
+  const sheetClose = document.getElementById('recordSheetClose');
+  if (sheetClose) {
+    sheetClose.addEventListener('click', function(e) {
+      e.preventDefault();
+      closeRecordSheet();
+    });
+  }
+  // 点击遮罩关闭
+  const sheetOverlay = document.getElementById('recordSheet');
+  if (sheetOverlay) {
+    sheetOverlay.addEventListener('click', function(e) {
+      if (e.target === sheetOverlay) closeRecordSheet();
     });
   }
   // 删除确认弹窗
@@ -263,9 +278,8 @@ function renderPage(page) {
 
   switch (page) {
     case 'home': renderHome(main); break;
-    case 'record': renderRecord(main); break;
-    case 'finance': renderFinance(main); break;
-    case 'settings': renderSettings(main); break;
+    case 'stats': renderStats(main); break;
+    case 'profile': renderProfile(main); break;
   }
   updateRings();
 }
@@ -283,7 +297,7 @@ function renderHome(main) {
     html += `<div class="empty-state">
       <div class="empty-icon">☕</div>
       <div class="empty-text">今天还没记一杯呢</div>
-      <div class="empty-hint">点下方「记录」或「快捷记录」快速记录</div>
+      <div class="empty-hint">点击右下角 + 按钮快速记录</div>
     </div>`;
   }
 
@@ -350,6 +364,19 @@ function quickFavorite() {
   toast(msg);
 }
 
+/* ---------- 记录弹窗 Sheet ---------- */
+function openRecordSheet() {
+  resetRecState();
+  const body = document.getElementById('recordSheetBody');
+  if (body) renderRecordToContainer(body);
+  document.getElementById('recordSheet').classList.remove('hidden');
+  document.body.style.overflow = 'hidden'; // 防止滚动穿透
+}
+function closeRecordSheet() {
+  document.getElementById('recordSheet').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
 function makeRecord(t, n, sugar, ice, c, s, p, img) {
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -388,7 +415,8 @@ function resetRecState() {
 }
 resetRecState();
 
-function renderRecord(main) {
+function renderRecordToContainer(container) {
+  if (!container) return;
   const presets = PRESETS[recState.type] || PRESETS['COFFEE'];
   let chips = presets.map(function(p) {
     const active = recState.preset && recState.preset.n === p.n;
@@ -399,7 +427,7 @@ function renderRecord(main) {
   const name = recState.showCustom ? recState.customName : (recState.preset ? recState.preset.n : '');
   const disabled = !name || !recState.price;
 
-  main.innerHTML = `
+  container.innerHTML = `
     <div class="form-section">
       <div class="form-label">饮品类型</div>
       <div class="type-row">
@@ -471,12 +499,10 @@ function renderRecord(main) {
 
     <button class="btn-record" ${disabled?'disabled':''} id="submitBtn">🌿 干杯！记一杯</button>
     ${recState.imageProcessing ? '<div class="info-card" style="margin-bottom:10px;text-align:center">🖼️ 正在处理图片...</div>' : ''}
-    ${recState.image ? '<div class="info-card" style="margin-bottom:10px;text-align:center"><img src="' + recState.image + '" style="max-width:120px;max-height:120px;border-radius:8px;display:block;margin:0 auto"><span style="font-size:11px;color:var(--text2)">抠图预览</span></div>' : ''}
+    ${recState.image ? '<div class="info-card" style="margin-bottom:10px;text-align:center"><img src="' + recState.image + '" style="max-width:120px;max-height:120px;border-radius:8px;display:block;margin:0 auto"><span style="font-size:11px">抠图预览</span></div>' : ''}
   `;
 
-  // 绑定事件（避免 onclick 属性中的转义问题）
   bindRecordEvents();
-  // 初始同步 UI（名称预览、按钮状态等）
   syncRecordUI();
 }
 
@@ -541,7 +567,7 @@ function bindRecordEvents() {
       recState.caffeine = '';
       recState.sugar = '';
       recState.price = '';
-      renderRecord(document.getElementById('mainContent'));
+      renderRecordToContainer(document.getElementById('recordSheetBody'));
     });
   });
 
@@ -557,9 +583,9 @@ function bindRecordEvents() {
         recState.price = '';
       } else {
         selectPreset(this.dataset.preset);
-        return; // selectPreset 内部重新渲染
+        return;
       }
-      renderRecord(document.getElementById('mainContent'));
+      renderRecordToContainer(document.getElementById('recordSheetBody'));
     });
   });
 
@@ -569,7 +595,7 @@ function bindRecordEvents() {
     sp.querySelectorAll('.picker-option').forEach(function(el) {
       el.addEventListener('click', function() {
         recState.sugarIdx = parseInt(this.dataset.idx);
-        renderRecord(document.getElementById('mainContent'));
+        renderRecordToContainer(document.getElementById('recordSheetBody'));
       });
     });
   }
@@ -580,7 +606,7 @@ function bindRecordEvents() {
     ip.querySelectorAll('.picker-option').forEach(function(el) {
       el.addEventListener('click', function() {
         recState.iceIdx = parseInt(this.dataset.idx);
-        renderRecord(document.getElementById('mainContent'));
+        renderRecordToContainer(document.getElementById('recordSheetBody'));
       });
     });
   }
@@ -613,25 +639,24 @@ function bindRecordEvents() {
       const reader = new FileReader();
       reader.onload = function(ev) {
         recState.image = ev.target.result;
-        renderRecord(document.getElementById('mainContent'));
+        renderRecordToContainer(document.getElementById('recordSheetBody'));
       };
       reader.readAsDataURL(file);
 
       // 尝试抠图
       recState.imageProcessing = true;
-      renderRecord(document.getElementById('mainContent'));
+      renderRecordToContainer(document.getElementById('recordSheetBody'));
       try {
         const mod = await import('./utils/imageProcessor.js');
         const base64 = await mod.removeBackgroundFromFile(file);
         recState.image = base64;
         recState.imageProcessing = false;
-        renderRecord(document.getElementById('mainContent'));
+        renderRecordToContainer(document.getElementById('recordSheetBody'));
         toast('抠图完成 ✅');
       } catch (e) {
         console.warn('抠图失败，使用原图:', e.message);
-        // 抠图失败则保留原图
         recState.imageProcessing = false;
-        renderRecord(document.getElementById('mainContent'));
+        renderRecordToContainer(document.getElementById('recordSheetBody'));
       }
     });
   }
@@ -657,7 +682,12 @@ function selectPreset(name) {
     recState.sugar = '' + p.s;
     recState.price = '' + p.p;
   }
-  renderRecord(document.getElementById('mainContent'));
+  renderRecordToContainer(document.getElementById('recordSheetBody'));
+}
+
+function renderRecord(main) {
+  // 兼容旧调用，重定向到弹窗
+  renderRecordToContainer(main);
 }
 
 function submitRecord() {
@@ -674,7 +704,8 @@ function submitRecord() {
   const hour = new Date().getHours();
   if (r.t === 'COFFEE' && hour >= 20) toast('🌙 晚8点后喝咖啡可能影响睡眠');
   resetRecState();
-  switchPage('home');
+  closeRecordSheet();
+  if (currentPage === 'home' || currentPage === 'stats') renderPage(currentPage);
   toast('干杯！已记录 🎉');
 }
 
@@ -690,88 +721,59 @@ function setFavorite() {
   toast('快捷记录已更新 ✅');
 }
 
-/* ---------- 账单 ---------- */
-let financeTab = 0;
-function renderFinance(main) {
-  const wk = weeklySpending();
-  const mo = monthlySpending();
-  const cups = monthlyCups();
-  const amount = financeTab === 0 ? wk : mo;
+/* ---------- 统计页 ---------- */
+function renderStats(main) {
+  let financeTab = 0; // 闭包私有
+  function _render() {
+    const wk = weeklySpending();
+    const mo = monthlySpending();
+    const cups = monthlyCups();
+    const amount = financeTab === 0 ? wk : mo;
 
-  main.innerHTML = `
-    <div class="segmented">
-      <button class="seg-btn ${financeTab===0?'active':''}" data-tab="0">本周</button>
-      <button class="seg-btn ${financeTab===1?'active':''}" data-tab="1">本月</button>
-    </div>
-
-    <div class="finance-hero">
-      <div class="finance-amount">¥${amount.toFixed(1)}</div>
-      <div class="finance-label">${financeTab===0?'本周':'本月'}消费</div>
-      <div class="finance-extra">${financeTab===1 ? '共 ' + cups + ' 杯' : ''}</div>
-    </div>
-
-    <div class="motivation-card">
-      <span class="mot-icon">💡</span>
-      <div>
-        <div class="mot-title">趣味统计</div>
-        <div class="mot-text">${randomMotivation(cups)}</div>
+    main.innerHTML = `
+      <div class="segmented">
+        <button class="seg-btn ${financeTab===0?'active':''}" data-tab="0">本周</button>
+        <button class="seg-btn ${financeTab===1?'active':''}" data-tab="1">本月</button>
       </div>
-    </div>
 
-    <div class="section-header"><span class="section-title">消费明细</span></div>
-    ${records.slice(0, 20).map(function(r) { return `
-      <div class="record-item" style="padding:10px 12px">
-        <div class="record-icon">${r.t==='COFFEE'?'☕':'🧋'}</div>
-        <div class="record-info">
-          <div class="record-name">${esc(r.n)}</div>
-          <div class="record-meta">${fmtDate(r.ts)}</div>
+      <div class="finance-hero">
+        <div class="finance-amount">¥${amount.toFixed(1)}</div>
+        <div class="finance-label">${financeTab===0?'本周':'本月'}消费</div>
+        <div class="finance-extra">${financeTab===1 ? '共 ' + cups + ' 杯' : ''}</div>
+      </div>
+
+      <div class="motivation-card">
+        <span class="mot-icon">💡</span>
+        <div>
+          <div class="mot-title">趣味统计</div>
+          <div class="mot-text">${randomMotivation(cups)}</div>
         </div>
-        <span style="font-weight:900;color:var(--black);">¥${r.p}</span>
-      </div>`; }).join('')}
-  `;
+      </div>
 
-  // 绑定分段切换
-  document.querySelectorAll('.seg-btn').forEach(function(el) {
-    el.addEventListener('click', function() {
-      financeTab = parseInt(this.dataset.tab);
-      renderFinance(document.getElementById('mainContent'));
+      <div class="section-header"><span class="section-title">消费明细</span></div>
+      ${records.slice(0, 20).map(function(r) { return `
+        <div class="record-item" style="padding:10px 12px">
+          <div class="record-icon">${r.t==='COFFEE'?'☕':'🧋'}</div>
+          <div class="record-info">
+            <div class="record-name">${esc(r.n)}</div>
+            <div class="record-meta">${fmtDate(r.ts)}</div>
+          </div>
+          <span style="font-weight:900;color:var(--black);">¥${r.p}</span>
+        </div>`; }).join('')}
+    `;
+
+    document.querySelectorAll('.seg-btn').forEach(function(el) {
+      el.addEventListener('click', function() {
+        financeTab = parseInt(this.dataset.tab);
+        _render();
+      });
     });
-  });
+  }
+  _render();
 }
 
-function weeklySpending() {
-  const now = new Date();
-  const day = now.getDay();
-  const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1)); mon.setHours(0,0,0,0);
-  return records.filter(function(r) { return new Date(r.ts) >= mon; }).reduce(function(s, r) { return s + (r.p || 0); }, 0);
-}
-function monthlySpending() {
-  const now = new Date();
-  return records.filter(function(r) {
-    const d = new Date(r.ts);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).reduce(function(s, r) { return s + (r.p || 0); }, 0);
-}
-function monthlyCups() {
-  const now = new Date();
-  return records.filter(function(r) {
-    const d = new Date(r.ts);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).length;
-}
-function randomMotivation(cups) {
-  const msgs = [
-    '本月已喝 ' + cups + ' 杯，享受每一杯 ☕️',
-    '少喝5杯，省下的钱够买一支口红 💄',
-    '少喝5杯，省下的钱够买一个游戏皮肤 🎮',
-    '少喝3杯，就是一顿火锅的钱 🍲',
-    '控制咖啡因摄入，健康第一 💪',
-  ];
-  return msgs[Math.floor(Math.random() * msgs.length)];
-}
-
-/* ---------- 设置 ---------- */
-function renderSettings(main) {
+/* ---------- 我的页 ---------- */
+function renderProfile(main) {
   const t = localStorage.getItem('bt_theme') || 'apple';
 
   const themes = [
@@ -812,28 +814,60 @@ function renderSettings(main) {
 
     <div class="settings-group">
       <div class="settings-group-title">关于</div>
-      <div class="info-card">半糖主义 v1.2<br>记录每一杯咖啡与奶茶</div>
+      <div class="info-card">半糖主义 v1.3<br>记录每一杯咖啡与奶茶</div>
     </div>
   `;
 
-  // 绑定主题切换事件
   document.querySelectorAll('.theme-picker-card').forEach(function(el) {
     el.addEventListener('click', function() {
       const theme = this.dataset.theme;
       applyTheme(theme);
-      renderSettings(document.getElementById('mainContent'));
+      renderProfile(document.getElementById('mainContent'));
     });
   });
 
-  // 绑定重置快捷记录
   const resetBtn = document.getElementById('resetFavBtn');
   if (resetBtn) {
     resetBtn.addEventListener('click', function() {
       resetFav();
-      renderSettings(document.getElementById('mainContent'));
+      renderProfile(document.getElementById('mainContent'));
     });
   }
 }
+
+function weeklySpending() {
+  const now = new Date();
+  const day = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1)); mon.setHours(0,0,0,0);
+  return records.filter(function(r) { return new Date(r.ts) >= mon; }).reduce(function(s, r) { return s + (r.p || 0); }, 0);
+}
+function monthlySpending() {
+  const now = new Date();
+  return records.filter(function(r) {
+    const d = new Date(r.ts);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).reduce(function(s, r) { return s + (r.p || 0); }, 0);
+}
+function monthlyCups() {
+  const now = new Date();
+  return records.filter(function(r) {
+    const d = new Date(r.ts);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+}
+function randomMotivation(cups) {
+  const msgs = [
+    '本月已喝 ' + cups + ' 杯，享受每一杯 ☕️',
+    '少喝5杯，省下的钱够买一支口红 💄',
+    '少喝5杯，省下的钱够买一个游戏皮肤 🎮',
+    '少喝3杯，就是一顿火锅的钱 🍲',
+    '控制咖啡因摄入，健康第一 💪',
+  ];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+/* ---------- 设置（已合并到我的页）---------- */
+// renderSettings 不再独立存在，内容合并到 renderProfile 中
 
 function resetFav() {
   selectedFav = { t:'COFFEE', n:'生椰拿铁', sugar:'三分糖', ice:'去冰', c:200, s:15, p:22 };

@@ -327,6 +327,20 @@ body {
 .nav-item.active { color: var(--neon-cyan); font-weight: 700; text-shadow: var(--glow-text-cyan); }
 .nav-item.active::after { background: var(--neon-cyan); box-shadow: var(--glow-text-cyan); }
 
+/* FAB */
+.fab {
+  background: transparent; color: var(--neon-magenta);
+  border: 1px solid var(--neon-magenta); box-shadow: var(--shadow-neon-magenta);
+}
+.fab:active { transform: scale(0.92); box-shadow: 0 0 24px rgba(255,0,229,0.5); }
+
+/* 记录弹窗 */
+.record-sheet-overlay { background: rgba(0,0,0,0.7); }
+.record-sheet { background: var(--void-light); border: 1px solid rgba(0,240,255,0.15); }
+.record-sheet-header { background: var(--void-light); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.record-sheet-title { color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 1px; }
+.record-sheet-close { color: var(--text-dim); background: transparent; border: 1px solid rgba(255,255,255,0.1); }
+
 /* Toast & Modal */
 .toast {
   background: var(--card-bg); color: var(--neon-cyan);
