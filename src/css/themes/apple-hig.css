@@ -322,6 +322,19 @@ body {
 .daily-quote { background: var(--fill-tertiary); border: 1px solid var(--separator); }
 .daily-quote-text { color: var(--text); }
 
+/* 日历看板 */
+.cal-nav-btn { background: var(--fill-tertiary); color: var(--text); }
+.cal-month-label { color: var(--text); }
+.cal-weekdays { color: var(--text2); }
+.cal-cell { background: var(--bg-elevated); border: 1px solid var(--separator); }
+.cal-cell-empty { background: transparent; border: none; }
+.cal-today .cal-day-num { background: var(--blue); color: #FFF; }
+.cal-has-records { background: var(--blue-light); }
+.day-detail-card { background: var(--bg-elevated); }
+.day-detail-date { color: var(--text); }
+.day-detail-close { background: var(--fill-tertiary); color: var(--text2); }
+.day-detail-summary { background: var(--fill-tertiary); color: var(--text); }
+
 /* Toast & Modal */
 .toast {
   background: rgba(28,28,30,0.92); color: #FFF;

@@ -760,53 +760,223 @@ function setFavorite() {
 
 /* ---------- 统计页 ---------- */
 function renderStats(main) {
-  let financeTab = 0; // 闭包私有
+  let statsTab = 0; // 0=日历, 1=账单
+  let calYear, calMonth;
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth() + 1;
+
   function _render() {
     const wk = weeklySpending();
     const mo = monthlySpending();
     const cups = monthlyCups();
-    const amount = financeTab === 0 ? wk : mo;
+    const amount = statsTab === 0 ? mo : (statsTab === 1 ? wk : mo);
 
     main.innerHTML = `
       <div class="segmented">
-        <button class="seg-btn ${financeTab===0?'active':''}" data-tab="0">本周</button>
-        <button class="seg-btn ${financeTab===1?'active':''}" data-tab="1">本月</button>
+        <button class="seg-btn ${statsTab===0?'active':''}" data-tab="0">📅 日历</button>
+        <button class="seg-btn ${statsTab===1?'active':''}" data-tab="1">账单</button>
       </div>
-
-      <div class="finance-hero">
-        <div class="finance-amount">¥${amount.toFixed(1)}</div>
-        <div class="finance-label">${financeTab===0?'本周':'本月'}消费</div>
-        <div class="finance-extra">${financeTab===1 ? '共 ' + cups + ' 杯' : ''}</div>
-      </div>
-
-      <div class="motivation-card">
-        <span class="mot-icon">💡</span>
-        <div>
-          <div class="mot-title">趣味统计</div>
-          <div class="mot-text">${randomMotivation(cups)}</div>
-        </div>
-      </div>
-
-      <div class="section-header"><span class="section-title">消费明细</span></div>
-      ${records.slice(0, 20).map(function(r) { return `
-        <div class="record-item" style="padding:10px 12px">
-          <div class="record-icon">${r.t==='COFFEE'?'☕':'🧋'}</div>
-          <div class="record-info">
-            <div class="record-name">${esc(r.n)}</div>
-            <div class="record-meta">${fmtDate(r.ts)}</div>
-          </div>
-          <span style="font-weight:900;color:var(--black);">¥${r.p}</span>
-        </div>`; }).join('')}
+      ${statsTab === 0 ? renderCalendarHTML(calYear, calMonth) : renderFinanceHTML(wk, mo, cups, amount)}
     `;
 
     document.querySelectorAll('.seg-btn').forEach(function(el) {
       el.addEventListener('click', function() {
-        financeTab = parseInt(this.dataset.tab);
+        statsTab = parseInt(this.dataset.tab);
         _render();
       });
     });
+
+    if (statsTab === 0) bindCalendarEvents();
+    // 日详情弹窗
+    const dayOverlay = document.getElementById('dayDetailOverlay');
+    if (dayOverlay) {
+      dayOverlay.addEventListener('click', function(e) {
+        if (e.target === dayOverlay) this.classList.add('hidden');
+      });
+      const dayClose = document.getElementById('dayDetailClose');
+      if (dayClose) dayClose.addEventListener('click', function() {
+        dayOverlay.classList.add('hidden');
+      });
+    }
   }
   _render();
+}
+
+/* ---------- 日历 HTML ---------- */
+function renderCalendarHTML(year, month) {
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+  const startDow = firstDay.getDay(); // 0=Sun
+  const daysInMonth = lastDay.getDate();
+  const today = new Date().toISOString().slice(0, 10);
+
+  // 当月记录按日期分组
+  const dayMap = {};
+  records.forEach(function(r) {
+    const d = (r.ts || '').slice(0, 10);
+    if (!dayMap[d]) dayMap[d] = [];
+    dayMap[d].push(r);
+  });
+
+  const monthLabel = year + ' 年 ' + month + ' 月';
+  const weekHead = ['日','一','二','三','四','五','六'];
+
+  let cells = '';
+  // 前置空白
+  for (let i = 0; i < startDow; i++) { cells += '<div class="cal-cell cal-cell-empty"></div>'; }
+  // 日期格子
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const dayRecords = dayMap[dateStr] || [];
+    const isToday = dateStr === today;
+    const hasImg = dayRecords.some(function(r) { return r.image; });
+    const firstImg = hasImg ? dayRecords.find(function(r) { return r.image; }) : null;
+    const stickerHTML = firstImg
+      ? '<img class="cal-sticker" src="' + firstImg.image + '" style="transform:rotate(' + stickerRotation(dateStr) + 'deg)" alt="">'
+      : '';
+
+    cells += '<div class="cal-cell ' + (isToday ? 'cal-today' : '') + ' ' + (dayRecords.length > 0 ? 'cal-has-records' : '') + '" data-date="' + dateStr + '">' +
+      '<span class="cal-day-num">' + d + '</span>' +
+      stickerHTML +
+      (dayRecords.length > 0 ? '<span class="cal-dot">' + dayRecords.length + '</span>' : '') +
+    '</div>';
+  }
+
+  return `
+    <div class="cal-header">
+      <button class="cal-nav-btn" id="calPrev">◀</button>
+      <span class="cal-month-label">${monthLabel}</span>
+      <button class="cal-nav-btn" id="calNext">▶</button>
+    </div>
+    <div class="cal-weekdays">${weekHead.map(function(w) { return '<span>' + w + '</span>'; }).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend">
+      <span>🖼️ 有贴纸</span>
+      <span>🔵 有记录</span>
+    </div>
+    <!-- 日详情弹窗 -->
+    <div class="day-detail-overlay hidden" id="dayDetailOverlay">
+      <div class="day-detail-card" id="dayDetailCard">
+        <div class="day-detail-header">
+          <span class="day-detail-date" id="dayDetailDate"></span>
+          <button class="day-detail-close" id="dayDetailClose">✕</button>
+        </div>
+        <div class="day-detail-body" id="dayDetailBody"></div>
+      </div>
+    </div>
+  `;
+}
+
+function stickerRotation(dateStr) {
+  let seed = 0;
+  for (let i = 0; i < dateStr.length; i++) { seed = ((seed << 5) - seed) + dateStr.charCodeAt(i); seed |= 0; }
+  return (Math.abs(seed) % 17) - 8; // -8 ~ +8
+}
+
+/* ---------- 日历事件 ---------- */
+function bindCalendarEvents() {
+  var calYear, calMonth;
+  var labelEl = document.querySelector('.cal-month-label');
+  if (labelEl) {
+    var parts = labelEl.textContent.match(/(\d+).*?(\d+)/);
+    if (parts) { calYear = +parts[1]; calMonth = +parts[2]; }
+  }
+
+  var prev = document.getElementById('calPrev');
+  var next = document.getElementById('calNext');
+  if (prev) prev.addEventListener('click', function() {
+    calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; }
+    renderCalendarIntoContainer(calYear, calMonth);
+  });
+  if (next) next.addEventListener('click', function() {
+    calMonth++; if (calMonth > 12) { calMonth = 1; calYear++; }
+    renderCalendarIntoContainer(calYear, calMonth);
+  });
+
+  // 点击日期
+  document.querySelectorAll('.cal-cell.cal-has-records').forEach(function(el) {
+    el.addEventListener('click', function() {
+      showDayDetail(this.dataset.date);
+    });
+  });
+}
+
+function renderCalendarIntoContainer(year, month) {
+  var main = document.getElementById('mainContent');
+  if (!main) return;
+
+  // 保持 segmented 不动，替换后面的日历部分
+  var seg = main.querySelector('.segmented');
+  var after = seg ? seg.nextElementSibling : main.firstElementChild;
+  var wrapper = document.createElement('div');
+  wrapper.innerHTML = renderCalendarHTML(year, month);
+  // 替换
+  if (after) {
+    while (wrapper.firstChild) { main.insertBefore(wrapper.firstChild, after); }
+    while (after && after !== main.lastElementChild && after.nextElementSibling) {
+      after.nextElementSibling.remove();
+    }
+    after.remove();
+  }
+  bindCalendarEvents();
+}
+
+/* ---------- 日详情弹窗 ---------- */
+function showDayDetail(dateStr) {
+  const dayRecords = records.filter(function(r) { return (r.ts || '').slice(0, 10) === dateStr; });
+  const overlay = document.getElementById('dayDetailOverlay');
+  const dateEl = document.getElementById('dayDetailDate');
+  const body = document.getElementById('dayDetailBody');
+  if (!overlay || !dateEl || !body) return;
+
+  dateEl.textContent = dateStr;
+  const totalC = dayRecords.reduce(function(s, r) { return s + (r.c || 0); }, 0);
+  const totalS = dayRecords.reduce(function(s, r) { return s + (r.s || 0); }, 0);
+  const totalP = dayRecords.reduce(function(s, r) { return s + (r.p || 0); }, 0);
+
+  body.innerHTML = dayRecords.map(function(r) {
+    return '<div class="day-detail-item">' +
+      '<span class="day-detail-icon">' + (r.t === 'COFFEE' ? '☕' : '🧋') + '</span>' +
+      '<div class="day-detail-info">' +
+        '<div class="day-detail-name">' + esc(r.n) + '</div>' +
+        '<div class="day-detail-meta">' + esc(r.sugar) + ' / ' + esc(r.ice) + ' · ¥' + r.p + '</div>' +
+      '</div>' +
+      '<div class="day-detail-nums">' + r.c + 'mg · ' + r.s + 'g</div>' +
+    '</div>';
+  }).join('') + '<div class="day-detail-summary">☕ ' + totalC + 'mg &nbsp; 🍬 ' + totalS + 'g &nbsp; 💰 ¥' + totalP.toFixed(1) + '</div>';
+
+  overlay.classList.remove('hidden');
+}
+
+/* ---------- 账单 HTML (从统计页抽取) ---------- */
+function renderFinanceHTML(wk, mo, cups, amount) {
+  return `
+    <div class="finance-hero">
+      <div class="finance-amount">¥${amount.toFixed(1)}</div>
+      <div class="finance-label">本月消费</div>
+      <div class="finance-extra">共 ${cups} 杯</div>
+    </div>
+
+    <div class="motivation-card">
+      <span class="mot-icon">💡</span>
+      <div>
+        <div class="mot-title">趣味统计</div>
+        <div class="mot-text">${randomMotivation(cups)}</div>
+      </div>
+    </div>
+
+    <div class="section-header"><span class="section-title">消费明细</span></div>
+    ${records.slice(0, 20).map(function(r) { return `
+      <div class="record-item" style="padding:10px 12px">
+        <div class="record-icon">${r.t==='COFFEE'?'☕':'🧋'}</div>
+        <div class="record-info">
+          <div class="record-name">${esc(r.n)}</div>
+          <div class="record-meta">${fmtDate(r.ts)}</div>
+        </div>
+        <span style="font-weight:900;color:var(--black);">¥${r.p}</span>
+      </div>`; }).join('')}
+  `;
 }
 
 /* ---------- 我的页 ---------- */
