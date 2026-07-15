@@ -487,68 +487,435 @@ body {
   text-align: center;
 }
 
-/* ---------- 设置 ---------- */
-.settings-group { margin-bottom: 20px; }
-/* 主题选择器卡片网格 */
-.theme-picker-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.theme-picker-card {
-  padding: 16px 14px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.theme-picker-card .tp-swatches {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 10px;
-}
-.theme-picker-card .tp-swatch {
-  width: 20px; height: 20px;
-  border-radius: 50%;
-}
-.theme-picker-card .tp-name {
-  font-weight: 800;
-  font-size: 14px;
-  margin-bottom: 2px;
-}
-.theme-picker-card .tp-desc {
-  font-size: 11px;
-  opacity: 0.7;
-  line-height: 1.4;
-}
+/* ═══ 我的页 · 精致卡片式布局 ═══ */
 
-/* 用户卡片 */
-.user-card {
-  padding: 16px;
-  border-radius: 14px;
-  background: rgba(0,0,0,0.02);
+/* 顶部用户大卡片 */
+.profile-card {
+  margin-bottom: 14px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFECB3 30%, #FFF8E1 60%, #E8F5E9 100%);
 }
-.user-avatar-row {
+.profile-card-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.6) 0%, transparent 60%),
+              radial-gradient(circle at 80% 70%, rgba(0,0,0,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.profile-card-body {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 14px;
+  gap: 16px;
+  padding: 20px 18px 14px;
 }
-.user-avatar-large {
-  font-size: 48px;
+.profile-avatar-wrap {
+  position: relative;
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+}
+.profile-avatar-large {
+  width: 64px; height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
-  background: rgba(0,0,0,0.04);
+  font-size: 36px;
+  border-radius: 50%;
+  background: #FFF;
+  border: 3px solid #1A1A1A;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-.user-avatar-picker {
+.profile-avatar-badge {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #1A1A1A;
+  color: #FFD600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-user-info {
+  flex: 1; min-width: 0;
+}
+.profile-nick-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 0;
+  border-bottom: 2px dashed transparent;
+  transition: border-color 0.15s;
+  max-width: 100%;
+}
+.profile-nick-row:hover,
+.profile-nick-row:active { border-bottom-color: rgba(0,0,0,0.15); }
+.profile-nick-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1A1A1A;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.profile-nick-edit {
+  font-size: 13px;
+  opacity: 0.35;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.profile-nick-row:hover .profile-nick-edit { opacity: 0.7; }
+.profile-nick-input {
+  font-size: 18px;
+  font-weight: 800;
+  border: none;
+  border-bottom: 2px solid #1A1A1A;
+  background: transparent;
+  outline: none;
+  color: #1A1A1A;
+  font-family: inherit;
+  letter-spacing: -0.3px;
+  width: 100%;
+  max-width: 200px;
+  padding: 4px 0;
+}
+.profile-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(0,0,0,0.4);
+  margin-top: 2px;
+}
+.profile-stats-row {
+  position: relative;
+  display: flex;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.profile-stat {
+  flex: 1;
+  text-align: center;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.profile-stat + .profile-stat {
+  border-left: 1px solid rgba(0,0,0,0.06);
+}
+.profile-stat-val {
+  font-size: 20px;
+  font-weight: 900;
+  color: #1A1A1A;
+  letter-spacing: -0.5px;
+}
+.profile-stat-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 头像选择器 */
+.profile-avatar-picker {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  flex: 1;
+  justify-content: center;
+  margin-bottom: 14px;
 }
+
+/* 分组卡片 */
+.profile-card-section {
+  margin-bottom: 12px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.02);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.profile-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 10px;
+}
+.profile-card-head-icon { font-size: 18px; }
+.profile-card-head-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1A1A1A;
+  letter-spacing: -0.2px;
+}
+.profile-card-body-inner {
+  padding: 0 4px 4px;
+}
+
+/* 行项目 */
+.profile-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  gap: 10px;
+  cursor: default;
+  transition: background 0.15s;
+  border-radius: 12px;
+  margin: 2px 4px;
+}
+.profile-row:active { background: rgba(0,0,0,0.03); }
+.profile-row-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.profile-row-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.04);
+}
+.profile-row-text {
+  flex: 1; min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.profile-row-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+.profile-row-val {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(0,0,0,0.4);
+}
+.profile-row-action {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  background: #FFF;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  color: inherit;
+}
+.profile-row-action:active {
+  background: rgba(0,0,0,0.04);
+  transform: scale(0.93);
+}
+.profile-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.profile-row-action-sm {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  background: #FFF;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: inherit;
+}
+.profile-row-action-sm:active {
+  background: rgba(0,0,0,0.04);
+  transform: scale(0.95);
+}
+.profile-row-divider {
+  height: 1px;
+  background: rgba(0,0,0,0.05);
+  margin: 0 8px;
+}
+.profile-row-label-only {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 16px 6px;
+}
+
+/* 主题芯片选择 */
+.profile-theme-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px 10px;
+}
+.theme-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(0,0,0,0.10);
+  background: #FFF;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.55);
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+}
+.theme-chip:active {
+  transform: scale(0.92);
+  transition: transform 0.1s ease;
+}
+.theme-chip.active {
+  background: #1A1A1A;
+  color: #FFF;
+  border-color: #1A1A1A;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.theme-chip-icon { font-size: 16px; }
+.theme-chip-name { white-space: nowrap; }
+
+/* 上限编辑弹窗 */
+.limit-edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: sheetFadeIn 0.2s ease;
+}
+.limit-edit-card {
+  background: #FFF;
+  border-radius: 22px;
+  width: 100%;
+  max-width: 340px;
+  animation: modalIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+}
+.limit-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px 8px;
+}
+.limit-edit-title {
+  font-size: 16px;
+  font-weight: 800;
+}
+.limit-edit-close {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.05);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.limit-edit-close:active { background: rgba(0,0,0,0.1); }
+.limit-edit-body {
+  padding: 8px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.limit-edit-icon { font-size: 36px; }
+.limit-edit-label {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.45;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.limit-edit-slider-wrap { width: 100%; }
+.limit-edit-slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 3px;
+  background: #E0E0E0;
+  outline: none;
+}
+.limit-edit-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #1A1A1A;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: transform 0.1s;
+}
+.limit-edit-slider::-webkit-slider-thumb:active { transform: scale(1.15); }
+.limit-edit-val-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.limit-edit-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.12);
+  background: #FFF;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+  font-family: inherit;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+.limit-edit-btn:active {
+  background: #F0F0F0;
+  transform: scale(0.9);
+}
+.limit-edit-val {
+  font-size: 36px;
+  font-weight: 900;
+  min-width: 80px;
+  text-align: center;
+  letter-spacing: -1px;
+  color: #1A1A1A;
+}
+.limit-edit-confirm {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  background: #1A1A1A;
+  color: #FFF;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+.limit-edit-confirm:active {
+  background: #333;
+  transform: scale(0.97);
+}
+
+/* 旧样式兼容 */
 .avatar-chip {
   width: 36px;
   height: 36px;
@@ -562,14 +929,13 @@ body {
   transition: all 0.15s;
 }
 .avatar-chip.active {
-  border-color: var(--today-color, #0071E3);
-  background: var(--today-bg, rgba(0,113,227,0.08));
+  border-color: #1A1A1A;
+  background: rgba(0,0,0,0.06);
 }
 .avatar-chip:active { transform: scale(0.9); }
-.user-nick-row { margin-top: 4px; }
 
-/* 上限设置 */
-.limit-row { display: flex; gap: 10px; }
+/* 旧版设置兼容 */
+.settings-group { margin-bottom: 20px; }
 .limit-item {
   flex: 1;
   display: flex;
@@ -578,38 +944,6 @@ body {
   padding: 10px 12px;
   border-radius: 12px;
   background: rgba(0,0,0,0.02);
-}
-.limit-label { font-size: 12px; font-weight: 700; white-space: nowrap; }
-.limit-input { width: 70px; text-align: center; font-weight: 800; font-size: 16px; }
-.limit-unit { font-size: 11px; font-weight: 600; opacity: 0.5; }
-
-/* 数据备份 */
-.backup-row {
-  display: flex;
-  gap: 8px;
-}
-.backup-row .btn-set-fav { flex: 1; }
-
-/* 页脚 */
-.profile-footer {
-  text-align: center;
-  padding: 32px 0 12px;
-  opacity: 0.45;
-}
-.profile-footer .pf-name {
-  font-size: 14px;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-.profile-footer .pf-version {
-  font-size: 11px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-.profile-footer .pf-thanks {
-  font-size: 11px;
-  line-height: 1.6;
-  font-weight: 400;
 }
 
 /* ---------- 底部导航 ---------- */
@@ -801,21 +1135,55 @@ body {
 /* 每日寄语 */
 .daily-quote {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
   margin-bottom: 16px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(0,0,0,0.03);
+  position: relative;
+  overflow: hidden;
 }
+.daily-quote-ornament {
+  font-size: 18px;
+  flex-shrink: 0;
+  opacity: 0.35;
+  line-height: 1;
+  margin-top: 2px;
+}
+.daily-quote-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.daily-quote-text {
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 600;
+  color: inherit;
+  letter-spacing: 0.3px;
+}
+.daily-quote-meta {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.35;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.daily-quote-deco {
+  font-size: 32px;
+  flex-shrink: 0;
+  opacity: 0.08;
+  position: absolute;
+  right: 10px;
+  bottom: -4px;
+  pointer-events: none;
+}
+/* 旧样式兼容 */
 .daily-quote-icon {
   font-size: 20px;
   flex-shrink: 0;
   line-height: 1.4;
-}
-.daily-quote-text {
-  font-size: 14px;
-  line-height: 1.6;
-  font-weight: 500;
-  color: inherit;
 }

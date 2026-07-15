@@ -59,6 +59,8 @@ const DAILY_QUOTES = [
   '拉花很丑没关系，味道对了就是好咖啡 🤎',
   '人生就像抹茶拿铁，苦中带甜才够味 🍵',
 ];
+const SUGAR_OPTS = ['无糖', '三分糖', '五分糖', '七分糖', '全糖'];
+const ICE_OPTS = ['去冰', '少冰', '正常冰', '多冰', '热饮'];
 
 /* ---------- 全局状态 ---------- */
 let currentPage = 'home';
@@ -75,6 +77,7 @@ let confirmCallback = null;
   ringInit();
   updateRings();
   renderPage('home');
+  updatePageVisibility('home');
   bindEvents();
   console.log('半糖主义 PWA 初始化完成');
 })();
@@ -104,6 +107,14 @@ function bindEvents() {
       switchPage(page);
     });
   });
+  // 快捷记录按钮
+  const favBtn = document.getElementById('favBtn');
+  if (favBtn) {
+    favBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      quickFavorite();
+    });
+  }
   // FAB 记录按钮
   const fabBtn = document.getElementById('fabRecordBtn');
   if (fabBtn) {
@@ -166,6 +177,10 @@ function loadTheme() {
   applyTheme(userSettings.theme || 'apple');
 }
 function applyTheme(t) {
+  // 验证主题是否合法
+  var validThemes = ['apple','neo','wabi','cyber','matcha','taro','night'];
+  if (validThemes.indexOf(t) === -1) t = 'apple';
+
   userSettings.theme = t;
   localStorage.setItem('bt_settings', JSON.stringify(userSettings));
   document.documentElement.setAttribute('data-theme', t);
@@ -176,6 +191,9 @@ function applyTheme(t) {
     wabi:   'css/themes/wabi-sabi.css',
     apple:  'css/themes/apple-hig.css',
     cyber:  'css/themes/cyberpunk.css',
+    matcha: 'css/themes/matcha-mint.css',
+    taro:   'css/themes/taro-purple.css',
+    night:  'css/themes/night-brew.css',
   };
   if (link && themeMap[t]) { link.href = themeMap[t]; }
   // 更新 PWA 状态栏颜色
@@ -185,6 +203,9 @@ function applyTheme(t) {
     wabi:  '#FDFAF5',
     apple: '#F2F2F7',
     cyber: '#0A0A0F',
+    matcha: '#FFFAF2',
+    taro:   '#FFFAF8',
+    night:  '#08080C',
   };
   if (metaColor && colorMap[t]) { metaColor.content = colorMap[t]; }
   console.log('主题切换:', t);
@@ -316,6 +337,17 @@ function switchPage(page) {
     el.classList.toggle('active', el.dataset.page === page);
   });
   renderPage(page);
+  updatePageVisibility(page);
+}
+
+// 控制全局元素可见性：仅首页展示杯子/进度/快捷按钮/FAB
+function updatePageVisibility(page) {
+  var isHome = page === 'home';
+  var homeOnlyIds = ['pageHeader', 'drinkCupSection', 'ringsSection', 'alertsContainer', 'favBtn', 'fabRecordBtn'];
+  homeOnlyIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.style.display = isHome ? '' : 'none'; }
+  });
 }
 
 function renderPage(page) {
@@ -330,13 +362,18 @@ function renderPage(page) {
     case 'stats': renderStats(main); break;
     case 'profile': renderProfile(main); break;
   }
-  updateRings();
 
-  // 入场动画：对子元素逐个添加 animated-in
-  const items = main.querySelectorAll('.anim-item');
-  items.forEach(function(el, i) {
-    el.style.animationDelay = (i * 60) + 'ms';
-    el.classList.add('animated-in');
+  if (page === 'home') updateRings();
+
+  // 入场动画：延迟一帧确保 WebView 完成布局后再激活动画
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      const items = main.querySelectorAll('.anim-item');
+      items.forEach(function(el, i) {
+        el.style.animationDelay = (i * 80) + 'ms';
+        el.classList.add('animated-in');
+      });
+    });
   });
 }
 
@@ -348,8 +385,12 @@ function renderHome(main) {
   let html = `
     <!-- 每日寄语 -->
     <div class="anim-item daily-quote">
-      <span class="daily-quote-icon">💬</span>
-      <span class="daily-quote-text">${esc(quote)}</span>
+      <div class="daily-quote-ornament">✦</div>
+      <div class="daily-quote-body">
+        <span class="daily-quote-text">${esc(quote)}</span>
+        <span class="daily-quote-meta">— 今日寄语</span>
+      </div>
+      <div class="daily-quote-deco">☕</div>
     </div>
 
     <div class="anim-item section-header">
@@ -1033,89 +1074,229 @@ function renderProfile(main) {
 
   const AVATARS = ['☕','🧋','🍵','🥤','🧃','🍹','🫖','🥛','🍶','🍺'];
   const themes = [
-    { id:'apple', name:'苹果风格',   desc:'毛玻璃·大圆角·SF字体',   swatches:['#0071E3','#F2F2F7','#1C1C1E','#34C759'] },
-    { id:'neo',   name:'潮玩波普',   desc:'硬阴影·粗边框·波普亮色', swatches:['#FFD600','#FF5E8A','#00D4C8','#1A1A1A'] },
-    { id:'wabi',  name:'日式侘寂',   desc:'大留白·柔阴影·衬线标题', swatches:['#6B4D3A','#FDFAF5','#8BA88A','#D9CFC0'] },
-    { id:'cyber', name:'赛博朋克',   desc:'暗黑霓虹·网格底·等宽数字', swatches:['#00F0FF','#FF00E5','#0A0A0F','#39FF14'] },
+    { id:'apple',  name:'苹果风格',        icon:'🍎', desc:'毛玻璃·大圆角·SF字体' },
+    { id:'matcha', name:'宇治抹茶',        icon:'🍵', desc:'低饱和灰绿·奶白·清新健康' },
+    { id:'taro',   name:'芋泥啵啵',        icon:'🥤', desc:'梦幻淡紫·藕粉·甜美手帐' },
+    { id:'wabi',   name:'日式侘寂',        icon:'🍃', desc:'大留白·柔阴影·衬线标题' },
+    { id:'neo',    name:'潮玩波普',        icon:'🎨', desc:'硬阴影·粗边框·波普亮色' },
+    { id:'night',  name:'深夜限定·微醺精酿', icon:'🌆', desc:'纯黑霓虹·发光蓝绿·修仙党' },
+    { id:'cyber',  name:'赛博朋克',          icon:'🌃', desc:'暗黑霓虹·网格底·等宽数字' },
   ];
 
+  const today = todayRecords();
+  const totalRecords = records.length;
+  const totalSpending = records.reduce(function(s, r) { return s + (r.p || 0); }, 0);
+
   main.innerHTML = `
-    <!-- 用户卡片 -->
-    <div class="settings-group">
-      <div class="user-card">
-        <div class="user-avatar-row">
-          <span class="user-avatar-large">${av}</span>
-          <div class="user-avatar-picker">
-            ${AVATARS.map(function(a) {
-              return '<span class="avatar-chip ' + (av===a?'active':'') + '" data-avatar="' + a + '">' + a + '</span>';
-            }).join('')}
+    <!-- 顶部用户大卡片 -->
+    <div class="profile-card anim-item">
+      <div class="profile-card-bg"></div>
+      <div class="profile-card-body">
+        <div class="profile-avatar-wrap">
+          <span class="profile-avatar-large">${av}</span>
+          <div class="profile-avatar-badge">✦</div>
+        </div>
+        <div class="profile-user-info">
+          <div class="profile-nick-row" id="profileNickRow">
+            <span class="profile-nick-text">${esc(nick) || '点击设置昵称'}</span>
+            <span class="profile-nick-edit">✎</span>
+          </div>
+          <div class="profile-subtitle">${nick ? '记录每一杯，品味每一天' : '— 轻触上方编辑昵称 —'}</div>
+        </div>
+      </div>
+      <div class="profile-stats-row">
+        <div class="profile-stat">
+          <span class="profile-stat-val">${today.length}</span>
+          <span class="profile-stat-lbl">今日杯数</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-val">${totalRecords}</span>
+          <span class="profile-stat-lbl">总记录</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-val">¥${totalSpending.toFixed(0)}</span>
+          <span class="profile-stat-lbl">累计消费</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 头像选择器 -->
+    <div class="profile-avatar-picker anim-item">
+      ${AVATARS.map(function(a) {
+        return '<span class="avatar-chip ' + (av===a?'active':'') + '" data-avatar="' + a + '">' + a + '</span>';
+      }).join('')}
+    </div>
+
+    <!-- 卡片 A：目标管理 -->
+    <div class="profile-card-section anim-item">
+      <div class="profile-card-head">
+        <span class="profile-card-head-icon">📊</span>
+        <span class="profile-card-head-title">目标管理</span>
+      </div>
+      <div class="profile-card-body-inner">
+        <div class="profile-row" id="caffeineRow">
+          <div class="profile-row-left">
+            <span class="profile-row-icon">☕</span>
+            <div class="profile-row-text">
+              <span class="profile-row-label">每日咖啡因上限</span>
+              <span class="profile-row-val" id="caffeineMaxDisplay">${cMax} mg</span>
+            </div>
+          </div>
+          <button class="profile-row-action" id="editCaffeineBtn">✎</button>
+        </div>
+        <div class="profile-row-divider"></div>
+        <div class="profile-row" id="sugarRow">
+          <div class="profile-row-left">
+            <span class="profile-row-icon">🍬</span>
+            <div class="profile-row-text">
+              <span class="profile-row-label">每日糖分上限</span>
+              <span class="profile-row-val" id="sugarMaxDisplay">${sMax} g</span>
+            </div>
+          </div>
+          <button class="profile-row-action" id="editSugarBtn">✎</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片 B：个性化 -->
+    <div class="profile-card-section anim-item">
+      <div class="profile-card-head">
+        <span class="profile-card-head-icon">🎨</span>
+        <span class="profile-card-head-title">个性化</span>
+      </div>
+      <div class="profile-card-body-inner">
+        <div class="profile-row-label-only">应用主题</div>
+        <div class="profile-theme-chips">
+          ${themes.map(function(th) {
+            return '<button class="theme-chip ' + (t===th.id?'active':'') + '" data-theme="' + th.id + '">' +
+              '<span class="theme-chip-icon">' + th.icon + '</span>' +
+              '<span class="theme-chip-name">' + th.name + '</span>' +
+            '</button>';
+          }).join('')}
+        </div>
+        <div class="profile-row-divider"></div>
+        <div class="profile-row">
+          <div class="profile-row-left">
+            <span class="profile-row-icon">⚡</span>
+            <div class="profile-row-text">
+              <span class="profile-row-label">快捷记录</span>
+              <span class="profile-row-val">${esc(selectedFav?.n||'--')} · ¥${selectedFav?.p||0}</span>
+            </div>
+          </div>
+          <button class="profile-row-action" id="resetFavBtn">↺</button>
+        </div>
+        <div class="profile-row-divider"></div>
+        <div class="profile-row">
+          <div class="profile-row-left">
+            <span class="profile-row-icon">📤</span>
+            <div class="profile-row-text">
+              <span class="profile-row-label">数据备份</span>
+              <span class="profile-row-val">导出 / 导入 JSON</span>
+            </div>
+          </div>
+          <div class="profile-row-actions">
+            <button class="profile-row-action-sm" id="exportBtn">导出</button>
+            <button class="profile-row-action-sm" id="importBtn">导入</button>
+            <input type="file" id="importFileInput" accept=".json" style="display:none">
           </div>
         </div>
-        <div class="user-nick-row">
-          <input class="input-field" id="nicknameInput" placeholder="输入昵称..." value="${esc(nick)}" maxlength="20">
+      </div>
+    </div>
+
+    <!-- 卡片 C：关于 -->
+    <div class="profile-card-section anim-item">
+      <div class="profile-card-head">
+        <span class="profile-card-head-icon">ℹ️</span>
+        <span class="profile-card-head-title">关于</span>
+      </div>
+      <div class="profile-card-body-inner">
+        <div class="profile-row">
+          <div class="profile-row-left">
+            <span class="profile-row-icon">📱</span>
+            <div class="profile-row-text">
+              <span class="profile-row-label">半糖主义 BANTANG</span>
+              <span class="profile-row-val">v1.3.0</span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-row-divider"></div>
+        <div class="profile-row">
+          <div class="profile-row-left">
+            <span class="profile-row-icon">❤️</span>
+            <div class="profile-row-text">
+              <span class="profile-row-label">开源致谢</span>
+              <span class="profile-row-val">感谢开源社区的贡献</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 每日上限设置 -->
-    <div class="settings-group">
-      <div class="settings-group-title">⚖️ 每日上限</div>
-      <div class="limit-row">
-        <div class="limit-item">
-          <span class="limit-label">☕ 咖啡因</span>
-          <input class="input-field limit-input" id="caffeineMaxInput" type="number" value="${cMax}" min="50" max="2000" step="10">
-          <span class="limit-unit">mg</span>
+    <!-- 上限编辑弹窗 -->
+    <div class="limit-edit-overlay hidden" id="limitEditOverlay">
+      <div class="limit-edit-card" id="limitEditCard">
+        <div class="limit-edit-header">
+          <span class="limit-edit-title" id="limitEditTitle">编辑上限</span>
+          <button class="limit-edit-close" id="limitEditClose">✕</button>
         </div>
-        <div class="limit-item">
-          <span class="limit-label">🍬 糖分</span>
-          <input class="input-field limit-input" id="sugarMaxInput" type="number" value="${sMax}" min="10" max="500" step="5">
-          <span class="limit-unit">g</span>
+        <div class="limit-edit-body">
+          <div class="limit-edit-icon" id="limitEditIcon">☕</div>
+          <div class="limit-edit-label" id="limitEditLabel">咖啡因 (mg)</div>
+          <div class="limit-edit-slider-wrap">
+            <input type="range" class="limit-edit-slider" id="limitEditSlider" min="20" max="2000" step="10">
+          </div>
+          <div class="limit-edit-val-wrap">
+            <button class="limit-edit-btn" id="limitEditMinus">−</button>
+            <span class="limit-edit-val" id="limitEditVal">400</span>
+            <button class="limit-edit-btn" id="limitEditPlus">+</button>
+          </div>
+          <button class="limit-edit-confirm" id="limitEditConfirm">确定</button>
         </div>
       </div>
-    </div>
-
-    <!-- 主题切换 -->
-    <div class="settings-group">
-      <div class="settings-group-title">🎨 主题风格</div>
-      <div class="theme-picker-grid">
-        ${themes.map(function(th) {
-          return '<div class="theme-picker-card ' + (t===th.id?'active':'') + '" data-theme="' + th.id + '">' +
-            '<div class="tp-swatches">' +
-              th.swatches.map(function(c) { return '<span class="tp-swatch" style="background:' + c + '"></span>'; }).join('') +
-            '</div>' +
-            '<div class="tp-name">' + th.name + '</div>' +
-            '<div class="tp-desc">' + th.desc + '</div>' +
-          '</div>';
-        }).join('')}
-      </div>
-    </div>
-
-    <!-- 快捷记录 -->
-    <div class="settings-group">
-      <div class="settings-group-title">⚡ 快捷记录</div>
-      <div class="info-card">
-        ${esc(selectedFav?.n||'--')}（${selectedFav?.sugar||''}/${selectedFav?.ice||''} ¥${selectedFav?.p||0}）
-        <button id="resetFavBtn" style="margin-left:12px;font-size:12px;background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;color:inherit;">重置默认</button>
-      </div>
-    </div>
-
-    <!-- 数据备份 -->
-    <div class="settings-group">
-      <div class="settings-group-title">💾 数据管理</div>
-      <div class="backup-row">
-        <button class="btn-set-fav" id="exportBtn">📤 导出 JSON</button>
-        <button class="btn-set-fav" id="importBtn">📥 导入 JSON</button>
-        <input type="file" id="importFileInput" accept=".json" style="display:none">
-      </div>
-    </div>
-
-    <!-- 页脚 -->
-    <div class="profile-footer">
-      <div class="pf-name">半糖主义 BANTANG</div>
-      <div class="pf-version">v1.3.0</div>
-      <div class="pf-thanks">❤️ 记录每一杯咖啡与奶茶<br>感谢开源社区的贡献</div>
     </div>
   `;
+
+  bindProfileEvents(cMax, sMax);
+  // 延迟一帧触发入场动画
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      var items = main.querySelectorAll('.anim-item');
+      items.forEach(function(el, i) {
+        el.style.animationDelay = (i * 60) + 'ms';
+        el.classList.add('animated-in');
+      });
+    });
+  });
+}
+
+/* ——— Profile 事件绑定 ——— */
+function bindProfileEvents(cMax, sMax) {
+  var limitEditing = null; // 'caffeine' | 'sugar' | null
+  var limitTempVal = 0;
+
+  // 昵称点击编辑
+  var nickRow = document.getElementById('profileNickRow');
+  if (nickRow) {
+    nickRow.addEventListener('click', function() {
+      var currentNick = userSettings.nickname || '';
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'profile-nick-input';
+      input.value = currentNick;
+      input.placeholder = '输入昵称...';
+      input.maxLength = 20;
+      nickRow.innerHTML = '';
+      nickRow.appendChild(input);
+      input.focus();
+      input.addEventListener('blur', function() {
+        userSettings.nickname = this.value.trim();
+        saveSettings();
+      });
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { this.blur(); }
+      });
+    });
+  }
 
   // 头像选择
   document.querySelectorAll('.avatar-chip').forEach(function(el) {
@@ -1124,39 +1305,128 @@ function renderProfile(main) {
       saveSettings();
     });
   });
-  // 昵称
-  var nickInput = document.getElementById('nicknameInput');
-  if (nickInput) {
-    nickInput.addEventListener('input', function() {
-      userSettings.nickname = this.value;
-      saveSettings();
+
+  // 上限编辑弹窗
+  var overlay = document.getElementById('limitEditOverlay');
+  var slider = document.getElementById('limitEditSlider');
+  var valEl = document.getElementById('limitEditVal');
+  var titleEl = document.getElementById('limitEditTitle');
+  var iconEl = document.getElementById('limitEditIcon');
+  var labelEl = document.getElementById('limitEditLabel');
+
+  function openLimitEdit(type) {
+    limitEditing = type;
+    var isCaffeine = type === 'caffeine';
+    var current = isCaffeine ? (userSettings.caffeineMax || 400) : (userSettings.sugarMax || 50);
+    limitTempVal = current;
+    titleEl.textContent = isCaffeine ? '咖啡因上限' : '糖分上限';
+    iconEl.textContent = isCaffeine ? '☕' : '🍬';
+    labelEl.textContent = isCaffeine ? '咖啡因 (mg)' : '糖分 (g)';
+    if (slider) {
+      slider.min = isCaffeine ? '50' : '10';
+      slider.max = isCaffeine ? '2000' : '500';
+      slider.step = isCaffeine ? '10' : '5';
+      slider.value = current;
+    }
+    if (valEl) valEl.textContent = current;
+    if (overlay) overlay.classList.remove('hidden');
+  }
+
+  function closeLimitEdit() {
+    if (overlay) overlay.classList.add('hidden');
+    limitEditing = null;
+  }
+
+  if (document.getElementById('editCaffeineBtn')) {
+    document.getElementById('editCaffeineBtn').addEventListener('click', function() {
+      openLimitEdit('caffeine');
     });
   }
-  // 上限
-  var cInput = document.getElementById('caffeineMaxInput');
-  var sInput = document.getElementById('sugarMaxInput');
-  if (cInput) cInput.addEventListener('change', function() {
-    userSettings.caffeineMax = parseInt(this.value) || 400;
-    saveSettings();
-  });
-  if (sInput) sInput.addEventListener('change', function() {
-    userSettings.sugarMax = parseInt(this.value) || 50;
-    saveSettings();
-  });
-  // 主题
-  document.querySelectorAll('.theme-picker-card').forEach(function(el) {
+  if (document.getElementById('editSugarBtn')) {
+    document.getElementById('editSugarBtn').addEventListener('click', function() {
+      openLimitEdit('sugar');
+    });
+  }
+  if (document.getElementById('editCaffeineBtn')) {
+    document.getElementById('caffeineRow').addEventListener('click', function(e) {
+      if (e.target === document.getElementById('editCaffeineBtn')) return;
+      openLimitEdit('caffeine');
+    });
+  }
+  if (document.getElementById('sugarRow')) {
+    document.getElementById('sugarRow').addEventListener('click', function(e) {
+      if (e.target === document.getElementById('editSugarBtn')) return;
+      openLimitEdit('sugar');
+    });
+  }
+
+  // Slider 变化
+  if (slider) {
+    slider.addEventListener('input', function() {
+      limitTempVal = parseInt(this.value);
+      if (valEl) valEl.textContent = limitTempVal;
+    });
+  }
+
+  // +/- 按钮
+  if (document.getElementById('limitEditMinus')) {
+    document.getElementById('limitEditMinus').addEventListener('click', function() {
+      var step = limitEditing === 'caffeine' ? 10 : 5;
+      var min = limitEditing === 'caffeine' ? 50 : 10;
+      limitTempVal = Math.max(min, limitTempVal - step);
+      if (slider) slider.value = limitTempVal;
+      if (valEl) valEl.textContent = limitTempVal;
+    });
+  }
+  if (document.getElementById('limitEditPlus')) {
+    document.getElementById('limitEditPlus').addEventListener('click', function() {
+      var step = limitEditing === 'caffeine' ? 10 : 5;
+      var max = limitEditing === 'caffeine' ? 2000 : 500;
+      limitTempVal = Math.min(max, limitTempVal + step);
+      if (slider) slider.value = limitTempVal;
+      if (valEl) valEl.textContent = limitTempVal;
+    });
+  }
+
+  // 确认
+  if (document.getElementById('limitEditConfirm')) {
+    document.getElementById('limitEditConfirm').addEventListener('click', function() {
+      if (limitEditing === 'caffeine') {
+        userSettings.caffeineMax = limitTempVal;
+      } else if (limitEditing === 'sugar') {
+        userSettings.sugarMax = limitTempVal;
+      }
+      saveSettings();
+      closeLimitEdit();
+    });
+  }
+
+  // 关闭
+  if (document.getElementById('limitEditClose')) {
+    document.getElementById('limitEditClose').addEventListener('click', closeLimitEdit);
+  }
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeLimitEdit();
+    });
+  }
+
+  // 主题切换
+  document.querySelectorAll('.theme-chip').forEach(function(el) {
     el.addEventListener('click', function() {
       var theme = this.dataset.theme;
       applyTheme(theme);
       renderProfile(document.getElementById('mainContent'));
     });
   });
+
   // 快捷记录重置
   var resetBtn = document.getElementById('resetFavBtn');
   if (resetBtn) resetBtn.addEventListener('click', function() {
     resetFav();
     renderProfile(document.getElementById('mainContent'));
   });
+
   // 导出
   var exportBtn = document.getElementById('exportBtn');
   if (exportBtn) exportBtn.addEventListener('click', function() {
@@ -1174,6 +1444,7 @@ function renderProfile(main) {
     a.click();
     toast('导出成功 ✅');
   });
+
   // 导入
   var importBtn = document.getElementById('importBtn');
   var importInput = document.getElementById('importFileInput');
@@ -1244,12 +1515,29 @@ function resetFav() {
 
 /* ---------- 每日寄语 ---------- */
 function getDailyQuote() {
-  // 基于当日日期 (YYYY-MM-DD) 确定性选择，同一天不会变
+  // 每日一句：同一天内不换，跨天后自动换新
+  // 每次页面挂载时强制刷新，但当天内的 seed 一致，保证同一句
   const today = new Date().toISOString().slice(0, 10);
-  let seed = 0;
-  for (let i = 0; i < today.length; i++) { seed = ((seed << 5) - seed) + today.charCodeAt(i); seed |= 0; }
-  const idx = Math.abs(seed) % DAILY_QUOTES.length;
-  return DAILY_QUOTES[idx];
+  const stored = localStorage.getItem('bt_quote_date');
+
+  if (stored === today) {
+    // 同一天：返回已记录的句子
+    var savedQuote = localStorage.getItem('bt_quote_text');
+    if (savedQuote) return savedQuote;
+  }
+
+  // 新的一天 or 首次：用 Math.random() 随机抽取
+  const idx = Math.floor(Math.random() * DAILY_QUOTES.length);
+  const quote = DAILY_QUOTES[idx];
+
+  // 持久化：当天不变
+  localStorage.setItem('bt_quote_date', today);
+  localStorage.setItem('bt_quote_text', quote);
+  return quote;
+}
+function refreshDailyQuote() {
+  // 强制刷新句子（切换页面时调用，当天内返回同一句）
+  return getDailyQuote();
 }
 
 /* ---------- 工具 ---------- */
