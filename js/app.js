@@ -5,8 +5,8 @@
 /* ---------- 常量 ---------- */
 const CAFFEINE_MAX = 400;
 const SUGAR_MAX = 50;
-const R = 55;
-const CIRCUMFERENCE = Math.PI * R * 2;
+const RING_R = 48;
+const CIRCUMFERENCE = Math.PI * RING_R * 2;
 
 const PRESETS = {
   COFFEE: [
@@ -107,12 +107,30 @@ function updateFavBtn() {
 }
 
 function loadTheme() {
-  const t = localStorage.getItem('bt_theme') || 'latte';
+  const t = localStorage.getItem('bt_theme') || 'apple';
   applyTheme(t);
 }
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('bt_theme', t);
+  // 切换 CSS 文件
+  const link = document.getElementById('themeStylesheet');
+  const themeMap = {
+    neo:    'css/themes/neo-brutalism.css',
+    wabi:   'css/themes/wabi-sabi.css',
+    apple:  'css/themes/apple-hig.css',
+    cyber:  'css/themes/cyberpunk.css',
+  };
+  if (link && themeMap[t]) { link.href = themeMap[t]; }
+  // 更新 PWA 状态栏颜色
+  const metaColor = document.getElementById('metaThemeColor');
+  const colorMap = {
+    neo:   '#FFFDF5',
+    wabi:  '#FDFAF5',
+    apple: '#F2F2F7',
+    cyber: '#0A0A0F',
+  };
+  if (metaColor && colorMap[t]) { metaColor.content = colorMap[t]; }
   console.log('主题切换:', t);
 }
 
@@ -138,19 +156,13 @@ function updateRings() {
   const cv = document.getElementById('caffeineValue');
   if (cv) {
     cv.textContent = c === Math.floor(c) ? c : c.toFixed(1);
-    cv.style.color = cPct >= 1 ? 'var(--warn)' : 'var(--primary)';
+    cv.style.color = cPct >= 1 ? 'var(--warn)' : 'var(--black)';
   }
   const sv = document.getElementById('sugarValue');
   if (sv) {
     sv.textContent = s === Math.floor(s) ? s : s.toFixed(1);
-    sv.style.color = sPct >= 1 ? 'var(--warn)' : 'var(--primary)';
+    sv.style.color = sPct >= 1 ? 'var(--warn)' : 'var(--black)';
   }
-
-  // 光晕
-  const cg = document.getElementById('caffeineGlow');
-  const sg = document.getElementById('sugarGlow');
-  if (cg) cg.classList.toggle('active', cPct >= 0.8);
-  if (sg) sg.classList.toggle('active', sPct >= 0.8);
 
   // 警告
   const cwarn = document.getElementById('caffeineWarning');
@@ -162,6 +174,67 @@ function updateRings() {
   const hasLateCoffee = todayRecords().some(r => r.t === 'COFFEE' && new Date(r.ts).getHours() >= 20);
   const sw = document.getElementById('sleepWarning');
   if (sw) sw.classList.toggle('hidden', !hasLateCoffee);
+
+  // 更新液体杯
+  updateDrinkCup(c, s);
+}
+
+/* ---------- 液体杯 ---------- */
+function updateDrinkCup(caffeine, sugar) {
+  const today = todayRecords();
+  const cupLabel = document.getElementById('cupLabel');
+  if (cupLabel) cupLabel.textContent = '今日 ' + today.length + ' 杯';
+
+  // 计算液体颜色：咖啡因多→咖啡色，奶茶多→奶茶色
+  const hasCoffee = today.some(r => r.t === 'COFFEE');
+  const hasMilkTea = today.some(r => r.t === 'MILK_TEA');
+  const liquid = document.getElementById('cupLiquid');
+  const wave1 = document.getElementById('cupWave1');
+  const wave2 = document.getElementById('cupWave2');
+
+  let liquidColor, waveColor;
+  if (hasCoffee && !hasMilkTea) {
+    liquidColor = 'rgba(107,58,42,0.6)';
+    waveColor = 'rgba(107,58,42,0.55)';
+  } else if (hasMilkTea && !hasCoffee) {
+    liquidColor = 'rgba(212,149,106,0.6)';
+    waveColor = 'rgba(212,149,106,0.55)';
+  } else if (hasCoffee && hasMilkTea) {
+    liquidColor = 'rgba(155,103,74,0.6)';
+    waveColor = 'rgba(155,103,74,0.55)';
+  } else {
+    // 没记录时是清水
+    liquidColor = 'rgba(200,220,240,0.25)';
+    waveColor = 'rgba(200,220,240,0.2)';
+  }
+
+  if (liquid) liquid.setAttribute('fill', liquidColor);
+  if (wave1) wave1.setAttribute('fill', waveColor);
+  if (wave2) wave2.setAttribute('fill', liquidColor);
+
+  // 液体高度：按咖啡因+糖分综合计算，最高到 90%
+  const total = today.length;
+  const maxCups = 8; // 8杯封顶
+  const pct = Math.min(total / maxCups, 1);
+  // y 从 155 (满) 到 155 (空: pct=0)
+  const baseY = 155;
+  const maxRise = 72;
+  const liquidY = baseY - (maxRise * pct);
+
+  if (liquid) {
+    liquid.setAttribute('y', liquidY);
+    liquid.setAttribute('height', baseY - liquidY + 10);
+  }
+  // 更新波浪位置
+  if (wave1) wave1.setAttribute('d', 'M30,' + (liquidY + 5) + ' Q45,' + (liquidY - 1) + ' 60,' + (liquidY + 5) + ' Q75,' + (liquidY + 11) + ' 90,' + (liquidY + 5) + ' Q105,' + (liquidY - 1) + ' 112,' + (liquidY + 5));
+  if (wave2) wave2.setAttribute('d', 'M28,' + (liquidY + 10) + ' Q45,' + (liquidY + 16) + ' 62,' + (liquidY + 10) + ' Q79,' + (liquidY + 4) + ' 96,' + (liquidY + 10) + ' Q108,' + (liquidY + 14) + ' 114,' + (liquidY + 10));
+
+  // 冰块显示/隐藏（只有冷饮才显示）
+  const hasIced = today.some(r => r.ice !== '热饮');
+  const ice1 = document.getElementById('cupIce1');
+  const ice2 = document.getElementById('cupIce2');
+  if (ice1) ice1.style.display = hasIced ? '' : 'none';
+  if (ice2) ice2.style.display = hasIced ? '' : 'none';
 }
 
 function todayRecords() {
@@ -230,7 +303,7 @@ function renderHome(main) {
 function recordItemHtml(r) {
   const icon = r.t === 'COFFEE' ? '☕' : '🧋';
   return `
-    <div class="record-item" style="cursor:default">
+    <div class="record-item">
       <div class="record-icon">${icon}</div>
       <div class="record-info">
         <div class="record-name">${esc(r.n)}</div>
@@ -245,7 +318,7 @@ function recordItemHtml(r) {
           <span>${fmtTime(r.ts)}</span>
         </div>
       </div>
-      <button class="btn-delete" data-id="${r.id}">🗑</button>
+      <button class="btn-delete" data-id="${r.id}">✕</button>
     </div>`;
 }
 
@@ -594,13 +667,13 @@ function renderFinance(main) {
 
     <div class="section-header"><span class="section-title">消费明细</span></div>
     ${records.slice(0, 20).map(function(r) { return `
-      <div class="record-item" style="padding:12px 14px">
+      <div class="record-item" style="padding:10px 12px">
         <div class="record-icon">${r.t==='COFFEE'?'☕':'🧋'}</div>
         <div class="record-info">
           <div class="record-name">${esc(r.n)}</div>
           <div class="record-meta">${fmtDate(r.ts)}</div>
         </div>
-        <span style="font-weight:700;color:var(--primary);">¥${r.p}</span>
+        <span style="font-weight:900;color:var(--black);">¥${r.p}</span>
       </div>`; }).join('')}
   `;
 
@@ -646,21 +719,27 @@ function randomMotivation(cups) {
 
 /* ---------- 设置 ---------- */
 function renderSettings(main) {
-  const t = localStorage.getItem('bt_theme') || 'latte';
+  const t = localStorage.getItem('bt_theme') || 'apple';
+
+  const themes = [
+    { id:'apple', name:'苹果风格',   desc:'毛玻璃·大圆角·SF字体',   swatches:['#0071E3','#F2F2F7','#1C1C1E','#34C759'] },
+    { id:'neo',   name:'潮玩波普',   desc:'硬阴影·粗边框·波普亮色', swatches:['#FFD600','#FF5E8A','#00D4C8','#1A1A1A'] },
+    { id:'wabi',  name:'日式侘寂',   desc:'大留白·柔阴影·衬线标题', swatches:['#6B4D3A','#FDFAF5','#8BA88A','#D9CFC0'] },
+    { id:'cyber', name:'赛博朋克',   desc:'暗黑霓虹·网格底·等宽数字', swatches:['#00F0FF','#FF00E5','#0A0A0F','#39FF14'] },
+  ];
+
   main.innerHTML = `
     <div class="settings-group">
       <div class="settings-group-title">主题风格</div>
-      <div class="option-card">
-        ${[
-          { id:'latte',     name:'拿铁',     desc:'浓郁摩卡褐 × 清爽抹茶绿', color:'#8C6239', sec:'#A3B899' },
-          { id:'americano', name:'美式',     desc:'深烘培色 × 暖奶泡',       color:'#3E2723', sec:'#A1887F' },
-          { id:'lemon',     name:'柠檬美式', desc:'橄榄绿 × 柠檬黄',         color:'#6B8E4E', sec:'#E8C840' },
-        ].map(function(th) {
-          return '<div class="option-row" data-theme="' + th.id + '" style="cursor:pointer">' +
-            '<span class="swatch ' + (t===th.id?'active':'') + '" style="background:' + th.color + '"></span>' +
-            '<div class="option-info"><div class="option-name">' + th.name + '</div><div class="option-desc">' + th.desc + '</div></div>' +
-            (t===th.id ? '<span class="option-check">✓</span>' : '') +
-            '</div>';
+      <div class="theme-picker-grid">
+        ${themes.map(function(th) {
+          return '<div class="theme-picker-card ' + (t===th.id?'active':'') + '" data-theme="' + th.id + '">' +
+            '<div class="tp-swatches">' +
+              th.swatches.map(function(c) { return '<span class="tp-swatch" style="background:' + c + '"></span>'; }).join('') +
+            '</div>' +
+            '<div class="tp-name">' + th.name + '</div>' +
+            '<div class="tp-desc">' + th.desc + '</div>' +
+          '</div>';
         }).join('')}
       </div>
     </div>
@@ -668,8 +747,8 @@ function renderSettings(main) {
     <div class="settings-group">
       <div class="settings-group-title">老规矩 · 快捷记录</div>
       <div class="info-card">
-        ⭐ ${esc(selectedFav?.n||'--')}（${selectedFav?.sugar||''}/${selectedFav?.ice||''} ¥${selectedFav?.p||0}）
-        <button id="resetFavBtn" style="margin-left:12px;font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;text-decoration:underline">重置默认</button>
+        ⚡ ${esc(selectedFav?.n||'--')}（${selectedFav?.sugar||''}/${selectedFav?.ice||''} ¥${selectedFav?.p||0}）
+        <button id="resetFavBtn" style="margin-left:12px;font-size:12px;background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;color:inherit;">重置默认</button>
       </div>
     </div>
 
@@ -680,12 +759,12 @@ function renderSettings(main) {
 
     <div class="settings-group">
       <div class="settings-group-title">关于</div>
-      <div class="info-card">半糖主义 v1.1<br><span style="color:var(--text3)">记录每一杯咖啡与奶茶</span></div>
+      <div class="info-card">半糖主义 v1.2<br>记录每一杯咖啡与奶茶</div>
     </div>
   `;
 
   // 绑定主题切换事件
-  document.querySelectorAll('.option-row').forEach(function(el) {
+  document.querySelectorAll('.theme-picker-card').forEach(function(el) {
     el.addEventListener('click', function() {
       const theme = this.dataset.theme;
       applyTheme(theme);

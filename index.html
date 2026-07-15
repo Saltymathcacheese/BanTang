@@ -6,11 +6,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="半糖主义">
-  <meta name="theme-color" content="#FDFBF7">
+  <meta name="theme-color" content="#F2F2F7" id="metaThemeColor">
   <title>半糖主义</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link id="themeStylesheet" rel="stylesheet" href="css/themes/apple-hig.css">
 </head>
 <body>
 
@@ -20,25 +21,56 @@
     <div class="header-inner">
       <div class="header-text">
         <h1>半糖主义</h1>
-        <p class="subtitle">今日摄入记录</p>
+        <p class="subtitle">BANTANG · 今日摄入记录</p>
       </div>
       <div class="header-decor">
-        <span class="decor-icon floating">☕</span>
+        <span class="decor-icon">🧋</span>
       </div>
     </div>
   </header>
+
+  <!-- 拟真液体杯 -->
+  <section class="drink-cup-section" id="drinkCupSection">
+    <div class="drink-cup-wrapper" id="drinkCupWrapper">
+      <svg viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="cupClip">
+            <path d="M35,75 L38,145 Q40,168 70,168 Q100,168 102,145 L105,75 Z"/>
+          </clipPath>
+        </defs>
+        <!-- 杯壁 -->
+        <path d="M30,70 L34,148 Q37,172 70,172 Q103,172 106,148 L110,70"
+          fill="rgba(255,255,255,0.5)" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+        <!-- 液体 -->
+        <rect class="cup-body-fill" id="cupLiquid" x="32" y="85" width="76" height="72"
+          clip-path="url(#cupClip)"/>
+        <!-- 波浪 -->
+        <path class="liquid-wave" id="cupWave1" d="M30,90 Q45,84 60,90 Q75,96 90,90 Q105,84 112,90"
+          fill="rgba(107,58,42,0.55)" clip-path="url(#cupClip)"/>
+        <path class="liquid-wave" id="cupWave2" d="M28,95 Q45,101 62,95 Q79,89 96,95 Q108,99 114,95"
+          fill="rgba(107,58,42,0.3)" clip-path="url(#cupClip)"/>
+        <!-- 冰块 -->
+        <rect class="cup-ice" id="cupIce1" x="50" y="100" width="16" height="14" rx="3"
+          transform="rotate(8,58,107)"/>
+        <rect class="cup-ice" id="cupIce2" x="74" y="110" width="14" height="12" rx="3"
+          transform="rotate(-10,81,116)"/>
+        <!-- 吸管 -->
+        <line x1="85" y1="25" x2="88" y2="100" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <rect x="83" y="22" width="10" height="10" rx="3" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+        <!-- 杯口 -->
+        <ellipse cx="70" cy="70" rx="42" ry="8" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+      </svg>
+      <div class="cup-label" id="cupLabel">今日 0 杯</div>
+    </div>
+  </section>
 
   <!-- 环形进度区 -->
   <section class="rings-section" id="ringsSection">
     <div class="rings-container">
       <div class="ring-card caffeine-card">
-        <div class="ring-glow" id="caffeineGlow"></div>
-        <svg viewBox="0 0 130 130" class="ring-svg">
-          <defs>
-            <filter id="caffeineShadow"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="var(--primary)" flood-opacity="0.3"/></filter>
-          </defs>
-          <circle cx="65" cy="65" r="55" class="ring-track"/>
-          <circle cx="65" cy="65" r="55" class="ring-fill caffeine-fill" id="caffeineRing" filter="url(#caffeineShadow)"/>
+        <svg viewBox="0 0 120 120" class="ring-svg">
+          <circle cx="60" cy="60" r="48" class="ring-track"/>
+          <circle cx="60" cy="60" r="48" class="ring-fill caffeine-fill" id="caffeineRing"/>
         </svg>
         <div class="ring-center">
           <span class="ring-value" id="caffeineValue">0</span>
@@ -51,20 +83,16 @@
         </div>
       </div>
       <div class="ring-card sugar-card">
-        <div class="ring-glow sugar-glow" id="sugarGlow"></div>
-        <svg viewBox="0 0 130 130" class="ring-svg">
-          <defs>
-            <filter id="sugarShadow"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="var(--secondary)" flood-opacity="0.3"/></filter>
-          </defs>
-          <circle cx="65" cy="65" r="55" class="ring-track"/>
-          <circle cx="65" cy="65" r="55" class="ring-fill sugar-fill" id="sugarRing" filter="url(#sugarShadow)"/>
+        <svg viewBox="0 0 120 120" class="ring-svg">
+          <circle cx="60" cy="60" r="48" class="ring-track"/>
+          <circle cx="60" cy="60" r="48" class="ring-fill sugar-fill" id="sugarRing"/>
         </svg>
         <div class="ring-center">
           <span class="ring-value" id="sugarValue">0</span>
           <span class="ring-unit">g</span>
         </div>
         <div class="ring-bottom">
-          <span class="ring-icon">🌿</span>
+          <span class="ring-icon">🍬</span>
           <span class="ring-label">糖分</span>
           <span class="ring-limit">上限 50g</span>
         </div>
@@ -92,15 +120,14 @@
 
   <!-- 老规矩快捷按钮 -->
   <button class="btn-favorite" id="favBtn">
-    <span class="fav-glow"></span>
-    <span class="fav-star">✨</span>
+    <span class="fav-star">⚡</span>
     <span class="fav-text">老规矩 — 记一杯</span>
   </button>
 
   <!-- 页面内容区 -->
   <main id="mainContent" class="main-content"></main>
 
-  <!-- 底部导航 (毛玻璃) -->
+  <!-- 底部导航 -->
   <nav class="bottom-nav" id="bottomNav">
     <div class="nav-bg"></div>
     <button class="nav-item active" data-page="home">
@@ -108,7 +135,7 @@
       <span class="nav-label">主页</span>
     </button>
     <button class="nav-item" data-page="record">
-      <span class="nav-icon">☕</span>
+      <span class="nav-icon">➕</span>
       <span class="nav-label">记录</span>
     </button>
     <button class="nav-item" data-page="finance">

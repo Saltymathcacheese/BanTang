@@ -1,0 +1,396 @@
+/* ═══════════════════════════════════════
+   半糖主义 PWA — 基础布局样式 (base.css)
+   所有视觉风格由 css/themes/*.css 提供
+   ═══════════════════════════════════════ */
+
+/* ---------- 全局重置与布局 ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-tap-highlight-color: transparent; }
+body {
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px calc(var(--nav-h, 72px) + var(--bottom-safe, 16px) + 24px);
+  position: relative;
+}
+
+/* ---------- Header 布局 ---------- */
+.header { padding: 28px 0 20px; }
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header-decor .decor-icon {
+  font-size: 44px;
+  display: block;
+}
+.header-text h1 {
+  position: relative;
+  display: inline-block;
+}
+
+/* ---------- SVG 液体杯 ---------- */
+.drink-cup-section {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.drink-cup-wrapper {
+  position: relative;
+  width: 140px; height: 180px;
+}
+.drink-cup-wrapper svg { width: 100%; height: 100%; }
+.cup-outline {
+  fill: none;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.cup-body-fill { clip-path: url(#cupClip); }
+.cup-ice {
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  fill: rgba(200,230,255,0.6);
+}
+.cup-label {
+  position: absolute;
+  bottom: -8px; left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* ---------- 看板卡片 ---------- */
+.rings-section { margin-bottom: 16px; }
+.rings-container { display: flex; gap: 12px; }
+.ring-card {
+  flex: 1;
+  padding: 18px 0 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.ring-svg {
+  width: 100px; height: 100px;
+  transform: rotate(-90deg);
+  position: relative;
+  z-index: 1;
+}
+.ring-track { fill: none; stroke-width: 9; }
+.ring-fill {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+}
+.ring-center {
+  position: absolute;
+  top: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+.ring-unit { margin-top: 1px; }
+.ring-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 6px;
+  gap: 1px;
+  z-index: 1;
+}
+
+/* ---------- 快捷记录按钮 ---------- */
+.btn-favorite {
+  width: 100%;
+  padding: 14px 20px;
+  cursor: pointer;
+  margin-bottom: 18px;
+  position: relative;
+}
+.btn-favorite .fav-star { margin-right: 6px; }
+
+/* ---------- 警告卡片 ---------- */
+.alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.alert-icon { font-size: 20px; flex-shrink: 0; }
+
+/* ---------- 记录列表 ---------- */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.empty-state { text-align: center; padding: 40px 20px; }
+.empty-state .empty-icon { font-size: 44px; margin-bottom: 10px; }
+.record-item {
+  padding: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.record-icon {
+  width: 42px; height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.record-info { flex: 1; min-width: 0; }
+.record-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.record-tags { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
+.record-meta {
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+}
+.btn-delete {
+  width: 30px; height: 30px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- 记录页表单 ---------- */
+.form-section { margin-bottom: 14px; }
+.type-row { display: flex; gap: 10px; }
+.type-card {
+  flex: 1;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+}
+.type-card .type-icon { font-size: 28px; display: block; margin-bottom: 4px; }
+.preset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.preset-chip {
+  padding: 7px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.drink-name-preview {
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 8px;
+}
+.input-row { display: flex; gap: 10px; }
+.input-group { flex: 1; }
+.input-label { margin-bottom: 5px; }
+.input-field {
+  width: 100%;
+  padding: 11px 12px;
+  outline: none;
+}
+.input-prefix { position: relative; }
+.input-prefix .input-field { padding-left: 26px; }
+.prefix {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%);
+}
+.btn-record {
+  width: 100%;
+  padding: 15px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.btn-record:disabled {
+  cursor: default;
+}
+.picker-row { display: flex; gap: 10px; }
+.picker-col { flex: 1; }
+.picker-card { overflow: hidden; }
+.picker-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.picker-option:last-child { border-bottom: none; }
+.btn-set-fav {
+  display: block;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  padding: 11px;
+}
+
+/* ---------- 账单页 ---------- */
+.segmented {
+  display: flex;
+  padding: 3px;
+  margin-bottom: 14px;
+}
+.seg-btn {
+  flex: 1;
+  padding: 9px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.finance-hero {
+  text-align: center;
+  padding: 28px 20px;
+  margin-bottom: 14px;
+  position: relative;
+}
+.motivation-card {
+  padding: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.mot-icon { font-size: 26px; flex-shrink: 0; }
+
+/* ---------- 设置 ---------- */
+.settings-group { margin-bottom: 20px; }
+/* 主题选择器卡片网格 */
+.theme-picker-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.theme-picker-card {
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.theme-picker-card .tp-swatches {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.theme-picker-card .tp-swatch {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+}
+.theme-picker-card .tp-name {
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.theme-picker-card .tp-desc {
+  font-size: 11px;
+  opacity: 0.7;
+  line-height: 1.4;
+}
+
+/* ---------- 底部导航 ---------- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  height: var(--nav-h, 72px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: var(--bottom-safe, 16px);
+  z-index: 100;
+}
+.nav-bg {
+  position: absolute;
+  inset: 0;
+  padding-bottom: var(--bottom-safe, 16px);
+}
+.nav-item {
+  position: relative;
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 6px 0;
+  z-index: 1;
+}
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  width: 20px; height: 3px;
+}
+.nav-icon { font-size: 20px; line-height: 1; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  bottom: calc(var(--nav-h, 72px) + var(--bottom-safe, 16px) + 50px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 11px 24px;
+  z-index: 200;
+  white-space: nowrap;
+  animation: toastIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-card {
+  padding: 24px 20px;
+  text-align: center;
+  max-width: 300px;
+  width: 100%;
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.modal-icon { font-size: 40px; margin-bottom: 6px; }
+.modal-title { margin-bottom: 4px; }
+.modal-desc { margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 8px; }
+.btn-modal {
+  flex: 1;
+  padding: 11px;
+  cursor: pointer;
+}
+
+/* ---------- 通用 ---------- */
+.hidden { display: none !important; }
+.main-content {
+  animation: pageIn 0.25s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
