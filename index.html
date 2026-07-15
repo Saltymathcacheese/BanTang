@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="半糖主义">
+  <meta name="theme-color" content="#FDFBF7">
+  <title>半糖主义</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <!-- 顶部标题区 -->
+  <header class="header" id="pageHeader">
+    <div class="header-inner">
+      <div class="header-text">
+        <h1>半糖主义</h1>
+        <p class="subtitle">今日摄入记录</p>
+      </div>
+      <div class="header-decor">
+        <span class="decor-icon floating">☕</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 环形进度区 -->
+  <section class="rings-section" id="ringsSection">
+    <div class="rings-container">
+      <div class="ring-card caffeine-card">
+        <div class="ring-glow" id="caffeineGlow"></div>
+        <svg viewBox="0 0 130 130" class="ring-svg">
+          <defs>
+            <filter id="caffeineShadow"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="var(--primary)" flood-opacity="0.3"/></filter>
+          </defs>
+          <circle cx="65" cy="65" r="55" class="ring-track"/>
+          <circle cx="65" cy="65" r="55" class="ring-fill caffeine-fill" id="caffeineRing" filter="url(#caffeineShadow)"/>
+        </svg>
+        <div class="ring-center">
+          <span class="ring-value" id="caffeineValue">0</span>
+          <span class="ring-unit">mg</span>
+        </div>
+        <div class="ring-bottom">
+          <span class="ring-icon">☕</span>
+          <span class="ring-label">咖啡因</span>
+          <span class="ring-limit">上限 400mg</span>
+        </div>
+      </div>
+      <div class="ring-card sugar-card">
+        <div class="ring-glow sugar-glow" id="sugarGlow"></div>
+        <svg viewBox="0 0 130 130" class="ring-svg">
+          <defs>
+            <filter id="sugarShadow"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="var(--secondary)" flood-opacity="0.3"/></filter>
+          </defs>
+          <circle cx="65" cy="65" r="55" class="ring-track"/>
+          <circle cx="65" cy="65" r="55" class="ring-fill sugar-fill" id="sugarRing" filter="url(#sugarShadow)"/>
+        </svg>
+        <div class="ring-center">
+          <span class="ring-value" id="sugarValue">0</span>
+          <span class="ring-unit">g</span>
+        </div>
+        <div class="ring-bottom">
+          <span class="ring-icon">🌿</span>
+          <span class="ring-label">糖分</span>
+          <span class="ring-limit">上限 50g</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 警告区 -->
+  <div class="alerts" id="alertsContainer">
+    <div class="alert alert-warn hidden" id="caffeineWarning">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body">
+        <div class="alert-title">咖啡因超标</div>
+        <div class="alert-desc">今日已超过 400mg 上限</div>
+      </div>
+    </div>
+    <div class="alert alert-sleep hidden" id="sleepWarning">
+      <span class="alert-icon">🌙</span>
+      <div class="alert-body">
+        <div class="alert-title">睡眠提醒</div>
+        <div class="alert-desc">晚8点后喝咖啡可能影响睡眠质量</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 老规矩快捷按钮 -->
+  <button class="btn-favorite" id="favBtn">
+    <span class="fav-glow"></span>
+    <span class="fav-star">✨</span>
+    <span class="fav-text">老规矩 — 记一杯</span>
+  </button>
+
+  <!-- 页面内容区 -->
+  <main id="mainContent" class="main-content"></main>
+
+  <!-- 底部导航 (毛玻璃) -->
+  <nav class="bottom-nav" id="bottomNav">
+    <div class="nav-bg"></div>
+    <button class="nav-item active" data-page="home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">主页</span>
+    </button>
+    <button class="nav-item" data-page="record">
+      <span class="nav-icon">☕</span>
+      <span class="nav-label">记录</span>
+    </button>
+    <button class="nav-item" data-page="finance">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">账单</span>
+    </button>
+    <button class="nav-item" data-page="settings">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">设置</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Toast -->
+<div class="toast hidden" id="toast"></div>
+
+<!-- 确认弹窗 -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal-card">
+    <div class="modal-icon">🗑️</div>
+    <div class="modal-title">删除这条记录？</div>
+    <div class="modal-desc">删除后无法恢复</div>
+    <div class="modal-actions">
+      <button class="btn-modal btn-cancel" id="modalCancel">取消</button>
+      <button class="btn-modal btn-confirm" id="modalConfirm">删除</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/register-sw.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

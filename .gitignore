@@ -1,0 +1,10 @@
+# Netlify 部署文件
+.netlify/
+# Claude Code 配置
+.claude/
+# 系统文件
+Thumbs.db
+Desktop.ini
+# IDE
+.vscode/
+.idea/
