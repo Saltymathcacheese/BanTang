@@ -323,8 +323,8 @@ function updateDrinkCup(caffeine, sugar) {
 }
 
 function todayRecords() {
-  const today = new Date().toISOString().slice(0, 10);
-  return records.filter(r => r.ts && r.ts.slice(0, 10) === today);
+  const today = getLocalDateStr();
+  return records.filter(r => (r.dateStr || (r.ts || '').slice(0, 10)) === today);
 }
 function todayCaffeine() { return todayRecords().reduce((s, r) => s + (r.c || 0), 0); }
 function todaySugar()    { return todayRecords().reduce((s, r) => s + (r.s || 0), 0); }
@@ -474,8 +474,9 @@ function quickFavorite() {
 }
 
 /* ---------- 记录弹窗 Sheet ---------- */
-function openRecordSheet() {
+function openRecordSheet(targetDateStr) {
   resetRecState();
+  if (targetDateStr) recState.dateStr = targetDateStr;
   const body = document.getElementById('recordSheetBody');
   if (body) renderRecordToContainer(body);
   document.getElementById('recordSheet').classList.remove('hidden');
@@ -486,13 +487,15 @@ function closeRecordSheet() {
   document.body.style.overflow = '';
 }
 
-function makeRecord(t, n, sugar, ice, c, s, p, img) {
+function makeRecord(t, n, sugar, ice, c, s, p, img, dateStr) {
+  const ts = dateStr ? new Date(dateStr + 'T12:00:00').toISOString() : new Date().toISOString();
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     t, n, sugar, ice, c, s, p,
     image: img || '',
     isTemplate: false,
-    ts: new Date().toISOString()
+    ts: ts,
+    dateStr: dateStr || getLocalDateStr(),
   };
 }
 
@@ -511,6 +514,7 @@ function deleteRecord(id) {
   updateRings();
   renderPage(currentPage);
   toast('已删除');
+  window.dispatchEvent(new CustomEvent('drinks-updated'));
 }
 
 /* ---------- 记录页 ---------- */
@@ -519,7 +523,7 @@ function resetRecState() {
   recState = {
     type: 'COFFEE', preset: null, customName: '',
     sugarIdx: 1, iceIdx: 0, caffeine: '', sugar: '', price: '', showCustom: false,
-    image: '', imageProcessing: false
+    image: '', imageProcessing: false, dateStr: getLocalDateStr(),
   };
 }
 resetRecState();
@@ -543,7 +547,7 @@ function renderRecordToContainer(container) {
       ${recState.image ? `
         <div class="sticker-preview">
           <img src="${recState.image}" alt="预览" id="stickerPreviewImg">
-          ${recState.imageProcessing ? '<div class="sticker-loading-overlay"><div class="sticker-spinner"></div><span>智能抠图中...</span></div>' : ''}
+          ${recState.imageProcessing ? '<div class="sticker-loading-overlay"><div class="sticker-spinner"></div><span>✨ AI 正在提取/生成贴纸...</span></div>' : ''}
         </div>
       ` : `
         <div class="sticker-placeholder">
@@ -615,6 +619,11 @@ function renderRecordToContainer(container) {
         <span class="prefix">¥</span>
         <input class="input-field" id="priceInput" type="number" placeholder="0" value="${recState.price}">
       </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">记录日期</div>
+      <input class="input-field" id="dateStrInput" type="date" value="${recState.dateStr}">
     </div>
 
     <button class="btn-record" ${disabled?'disabled':''} id="submitBtn">🌿 干杯！记一杯</button>
@@ -742,6 +751,14 @@ function bindRecordEvents() {
     });
   });
 
+  // 日期选择器
+  const dateInput = document.getElementById('dateStrInput');
+  if (dateInput) {
+    dateInput.addEventListener('change', function() {
+      recState.dateStr = this.value;
+    });
+  }
+
   // 贴纸区点击 → 触发文件选择
   const stickerArea = document.getElementById('stickerArea');
   const photoInput = document.getElementById('photoInput');
@@ -820,7 +837,7 @@ function submitRecord() {
   }
   const r = makeRecord(recState.type, name, SUGAR_OPTS[recState.sugarIdx], ICE_OPTS[recState.iceIdx],
                        +(recState.caffeine || 0), +(recState.sugar || 0), +(recState.price || 0),
-                       recState.image || '');
+                       recState.image || '', recState.dateStr || '');
   records.unshift(r);
   saveRecords();
   const hour = new Date().getHours();
@@ -829,6 +846,7 @@ function submitRecord() {
   closeRecordSheet();
   if (currentPage === 'home' || currentPage === 'stats') renderPage(currentPage);
   toast('干杯！已记录 🎉');
+  window.dispatchEvent(new CustomEvent('drinks-updated'));
 }
 
 function setFavorite() {
@@ -873,20 +891,24 @@ function renderStats(main) {
     });
 
     if (statsTab === 0) bindCalendarEvents();
-    // 日详情弹窗
-    const dayOverlay = document.getElementById('dayDetailOverlay');
-    if (dayOverlay) {
-      dayOverlay.addEventListener('click', function(e) {
-        if (e.target === dayOverlay) this.classList.add('hidden');
-      });
-      const dayClose = document.getElementById('dayDetailClose');
-      if (dayClose) dayClose.addEventListener('click', function() {
-        dayOverlay.classList.add('hidden');
-      });
-    }
   }
   _render();
 }
+
+// 全局更新事件，刷新日历（仅注册一次）
+(function() {
+  var refreshing = false;
+  window.addEventListener('drinks-updated', function() {
+    if (refreshing || currentPage !== 'stats') return;
+    refreshing = true;
+    var labelEl = document.querySelector('.cal-month-label');
+    if (labelEl) {
+      var parts = labelEl.textContent.match(/(\d+).*?(\d+)/);
+      if (parts) renderCalendarIntoContainer(+parts[1], +parts[2]);
+    }
+    setTimeout(function() { refreshing = false; }, 300);
+  });
+})();
 
 /* ---------- 日历 HTML ---------- */
 function renderCalendarHTML(year, month) {
@@ -894,12 +916,12 @@ function renderCalendarHTML(year, month) {
   const lastDay = new Date(year, month, 0);
   const startDow = firstDay.getDay(); // 0=Sun
   const daysInMonth = lastDay.getDate();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getLocalDateStr();
 
   // 当月记录按日期分组
   const dayMap = {};
   records.forEach(function(r) {
-    const d = (r.ts || '').slice(0, 10);
+    const d = r.dateStr || (r.ts || '').slice(0, 10);
     if (!dayMap[d]) dayMap[d] = [];
     dayMap[d].push(r);
   });
@@ -915,6 +937,7 @@ function renderCalendarHTML(year, month) {
     const dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     const dayRecords = dayMap[dateStr] || [];
     const isToday = dateStr === today;
+    const isFuture = dateStr > today;
     const hasImg = dayRecords.some(function(r) { return r.image; });
     const firstImg = hasImg ? dayRecords.find(function(r) { return r.image; }) : null;
     const stickerHTML = firstImg
@@ -924,7 +947,9 @@ function renderCalendarHTML(year, month) {
     cells += '<div class="cal-cell ' + (isToday ? 'cal-today' : '') + ' ' + (dayRecords.length > 0 ? 'cal-has-records' : '') + '" data-date="' + dateStr + '">' +
       '<span class="cal-day-num">' + d + '</span>' +
       stickerHTML +
-      (dayRecords.length > 0 ? '<span class="cal-dot">' + dayRecords.length + '</span>' : '') +
+      (dayRecords.length > 0
+        ? '<span class="cal-dot">' + dayRecords.length + '</span>'
+        : (!isFuture ? '<button class="cal-backfill-btn" data-date="' + dateStr + '">补记</button>' : '')) +
     '</div>';
   }
 
@@ -979,12 +1004,34 @@ function bindCalendarEvents() {
     renderCalendarIntoContainer(calYear, calMonth);
   });
 
+  // 补记按钮事件
+  document.querySelectorAll('.cal-backfill-btn').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var targetDate = this.dataset.date;
+      closeRecordSheet();
+      openRecordSheet(targetDate);
+    });
+  });
+
   // 点击日期
   document.querySelectorAll('.cal-cell.cal-has-records').forEach(function(el) {
     el.addEventListener('click', function() {
       showDayDetail(this.dataset.date);
     });
   });
+
+  // 日详情弹窗关闭（每次重新绑定，因为弹窗随日历重建）
+  var dayOverlay = document.getElementById('dayDetailOverlay');
+  if (dayOverlay) {
+    dayOverlay.addEventListener('click', function(e) {
+      if (e.target === dayOverlay) this.classList.add('hidden');
+    });
+    var dayClose = document.getElementById('dayDetailClose');
+    if (dayClose) dayClose.addEventListener('click', function() {
+      dayOverlay.classList.add('hidden');
+    });
+  }
 }
 
 function renderCalendarIntoContainer(year, month) {
@@ -1009,7 +1056,7 @@ function renderCalendarIntoContainer(year, month) {
 
 /* ---------- 日详情弹窗 ---------- */
 function showDayDetail(dateStr) {
-  const dayRecords = records.filter(function(r) { return (r.ts || '').slice(0, 10) === dateStr; });
+  const dayRecords = records.filter(function(r) { return (r.dateStr || (r.ts || '').slice(0, 10)) === dateStr; });
   const overlay = document.getElementById('dayDetailOverlay');
   const dateEl = document.getElementById('dayDetailDate');
   const body = document.getElementById('dayDetailBody');
@@ -1541,6 +1588,13 @@ function refreshDailyQuote() {
 }
 
 /* ---------- 工具 ---------- */
+function getLocalDateStr(dateInput) {
+  const d = dateInput ? new Date(dateInput) : new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
 function esc(s) {
   s = String(s || '');
   return s.replace(/[&<>"]/g, function(m) {
