@@ -2,7 +2,7 @@
   "name": "半糖主义",
   "short_name": "半糖主义",
   "description": "记录每一杯咖啡与奶茶",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FDFBF7",
